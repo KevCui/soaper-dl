@@ -39,7 +39,7 @@ set_var() {
     _SOURCE_FILE=".source.html"
     _EPISODE_LINK_LIST=".episode.link"
     _EPISODE_TITLE_LIST=".episode.title"
-    _SUBTITLE_LANGUAGUE="English"
+    _SUBTITLE_LANG="${SOAP2DAY_SUBTITLE_LANG:-English}"
 }
 
 set_args() {
@@ -198,7 +198,7 @@ download_media() {
         -H "Referer: ${_HOST}${1}" \
         --data "pass=${id}&param=${p}")"
     el="$($_JQ -r '.val' <<< "$d")"
-    sl="$($_JQ -r '.subs[]| select(.name == "'"$_SUBTITLE_LANGUAGUE"'") | .path' <<< "$d" || true)"
+    sl="$($_JQ -r '.subs[]| select(.name == "'"$_SUBTITLE_LANG"'") | .path' <<< "$d" || true)"
 
     if [[ -z ${_LIST_LINK_ONLY:-} ]]; then
         if [[ -z ${_DOWNLOAD_SUBTITLE_ONLY:-} ]]; then
@@ -207,7 +207,7 @@ download_media() {
         fi
         if [[ -n "$sl" ]]; then
             print_info "Downloading subtitle $2..."
-            $_CURL -L "${_HOST}${sl}" -g -o "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}.srt"
+            $_CURL -L "${_HOST}${sl}" -g -o "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}_${_SUBTITLE_LANG}.srt"
         fi
     else
         echo "$el" >&2
@@ -248,8 +248,8 @@ main() {
 
     if [[ -n "${_INPUT_NAME:-}" ]]; then
         _MEDIA_PATH=$($_FZF -1 <<< "$(search_media_by_name "$_INPUT_NAME")" \
-                                   | awk -F']' '{print $1}' \
-                                   | sed -E 's/^\[//')
+                                    | awk -F']' '{print $1}' \
+                                    | sed -E 's/^\[//')
     fi
 
     [[ "${_MEDIA_PATH:-}" == "" ]] && print_error "Media slug not found!"
