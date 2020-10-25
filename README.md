@@ -2,6 +2,14 @@
 
 > Bash script to download TV series and movies from [soap2day](https://soap2day.to/)
 
+## Table of Contents
+
+- [Dependency](#dependency)
+- [How to use](#how-to-use)
+  - [Example](#example)
+- [Disclaimer](#disclaimer)
+- [You may like...](#you-may-like)
+
 ## Dependency
 
 - [curl](https://curl.haxx.se/download.html)
