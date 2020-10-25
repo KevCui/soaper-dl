@@ -111,6 +111,18 @@ OR the interactive way:
 $ mpv "$(./soap2day-dl.sh -n 'game of' -l | grep 'https://')"
 ```
 
+- Download subtitle only
+
+```
+./soap2day-dl.sh -n 'game of thrones' -s
+```
+
+- Customize subtitle language
+
+```
+SOAP2DAY_SUBTITLE_LANG=French ./soap2day-dl.sh -n 'game of thrones'
+```
+
 ## Disclaimer
 
 The purpose of this script is to download TV series episodes and movies in order to watch them later in case when Internet is not available. Please do NOT copy or distribute downloaded materials to any third party. Watch them and delete them afterwards. Please use this script at your own responsibility.
