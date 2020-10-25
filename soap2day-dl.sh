@@ -3,7 +3,7 @@
 # Download TV series and Movies from Soap2day using CLI
 #
 #/ Usage:
-#/   ./soap2day-dl.sh [-n <name>] [-p <path>] [-e <episode_num1,num2,num3-num4...>] [-l] [-s]
+#/   ./soap2day-dl.sh [-n <name>] [-p <path>] [-e <num1,num2,num3-num4...>] [-l] [-s]
 #/
 #/ Options:
 #/   -n <name>               TV series or Movie name
