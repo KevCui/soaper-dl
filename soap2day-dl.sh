@@ -198,7 +198,10 @@ download_media() {
         -H "Referer: ${_HOST}${1}" \
         --data "pass=${id}&param=${p}")"
     el="$($_JQ -r '.val' <<< "$d")"
-    sl="$($_JQ -r '.subs[]| select(.name == "'"$_SUBTITLE_LANG"'") | .path' <<< "$d" || true)"
+    sl=""
+    if [[ "$($_JQ '.subs | length' <<< "$d")" -gt "0" ]]; then
+        sl="$($_JQ -r '.subs[]| select(.name == "'"$_SUBTITLE_LANG"'") | .path' <<< "$d")"
+    fi
 
     if [[ -z ${_LIST_LINK_ONLY:-} ]]; then
         if [[ -z ${_DOWNLOAD_SUBTITLE_ONLY:-} ]]; then
