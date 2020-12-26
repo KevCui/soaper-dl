@@ -26,10 +26,11 @@ usage() {
 }
 
 set_var() {
-    _CURL=$(command -v curl)
-    _JQ=$(command -v jq)
-    _PUP=$(command -v pup)
-    _FZF=$(command -v fzf)
+    _CURL="$(command -v curl)"
+    _JQ="$(command -v jq)"
+    _PUP="$(command -v pup)"
+    _FZF="$(command -v fzf)"
+    _CHROME="$(command -v chrome || command -v chromium)"
 
     _HOST="https://soap2day.to"
     _SEARCH_URL="$_HOST/search.html?keyword="
@@ -40,6 +41,11 @@ set_var() {
     _EPISODE_LINK_LIST=".episode.link"
     _EPISODE_TITLE_LIST=".episode.title"
     _SUBTITLE_LANG="${SOAP2DAY_SUBTITLE_LANG:-English}"
+
+    _CF_JS_SCRIPT="$_SCRIPT_PATH/bin/getCFcookie.js"
+    _CF_FILE="$_SCRIPT_PATH/cf_clearance"
+    _USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$($_CHROME --version | awk '{print $2}') Safari/537.36"
+    _CF_CLEARANCE="$(get_cf "$_HOST")"
 }
 
 set_args() {
@@ -91,6 +97,37 @@ sed_remove_space() {
     sed -E '/^[[:space:]]*$/d;s/^[[:space:]]+//;s/[[:space:]]+$//'
 }
 
+is_file_expired() {
+    # $1: file
+    # $2: n days
+    local o
+    o="yes"
+
+    if [[ -f "$1" && -s "$1" ]]; then
+        local d n
+        d=$(date -d "$(date -r "$1") +$2 days" +%s)
+        n=$(date +%s)
+
+        if [[ "$n" -lt "$d" ]]; then
+            o="no"
+        fi
+    fi
+
+    echo "$o"
+}
+
+get_cf() {
+    # $1: url
+    if [[ "$(is_file_expired "$_CF_FILE" "365")" == "yes" ]]; then
+        print_info "Wait for fetching cf_clearance..."
+        $_CF_JS_SCRIPT -u "$1" -a "$_USER_AGENT" -p "$_CHROME" \
+            | $_JQ -r '.[] | select(.name == "cf_clearance") | .value' \
+            | tee "$_CF_FILE"
+    else
+        cat "$_CF_FILE"
+    fi
+}
+
 get_media_id() {
     # $1: URL
     local u
@@ -105,6 +142,8 @@ get_media_id() {
 get_media_name() {
     # $1: media link
     $_CURL -sS "${_HOST}${1}" \
+        -H "User-Agent: ${_USER_AGENT}" \
+        -H "Cookie: cf_clearance=${_CF_CLEARANCE}" \
     | $_PUP ".panel-body h4 text{}" \
     | head -1 \
     | sed_remove_space
@@ -113,7 +152,10 @@ get_media_name() {
 search_media_by_name() {
     # $1: media name
     local d len l n
-    d="$($_CURL -sS "${_SEARCH_URL}$1" | $_PUP ".thumbnail")"
+    d="$($_CURL -sS "${_SEARCH_URL}$1" \
+            -H "User-Agent: ${_USER_AGENT}" \
+            -H "Cookie: cf_clearance=${_CF_CLEARANCE}" \
+        | $_PUP ".thumbnail")"
 
     len="$(grep -c "class=\"thumbnail" <<< "$d")"
     [[ -z "$len" || "$len" == "0" ]] && print_error "Media not found!"
@@ -129,7 +171,10 @@ search_media_by_name() {
 download_source() {
     local d
     mkdir -p "$_SCRIPT_PATH/$_MEDIA_NAME"
-    d="$($_CURL -sS "$_HOST/$_MEDIA_PATH" | $_PUP ".alert-info-ex")"
+    d="$($_CURL -sS "$_HOST/$_MEDIA_PATH" \
+            -H "User-Agent: ${_USER_AGENT}" \
+            -H "Cookie: cf_clearance=${_CF_CLEARANCE}" \
+        | $_PUP ".alert-info-ex")"
     if [[ "$_MEDIA_PATH" =~ ^"/movie_"* ]]; then
         download_media "$_MEDIA_PATH" "$_MEDIA_NAME"
     else
@@ -195,6 +240,8 @@ download_media() {
         p="https%3A%2F%2Ff1.wewon.to"
     fi
     d="$($_CURL -sSX POST "$u" \
+        -H "User-Agent: ${_USER_AGENT}" \
+        -H "Cookie: cf_clearance=${_CF_CLEARANCE}" \
         -H "Referer: ${_HOST}${1}" \
         --data "pass=${id}&param=${p}")"
     el="$($_JQ -r '.val' <<< "$d")"

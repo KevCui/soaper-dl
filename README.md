@@ -1,14 +1,17 @@
 # soap2day-dl
 
-> Bash script to download TV series and movies from [soap2day](https://soap2day.to/)
+> Download TV series and movies from [soap2day](https://soap2day.to/) in your terminal
 
 ## Table of Contents
 
 - [Dependency](#dependency)
+- [Installation](#installation)
 - [How to use](#how-to-use)
+  - [Usage](#usage)
   - [Example](#example)
+- [Limitation](#limitation)
 - [Disclaimer](#disclaimer)
-- [You may like...](#you-may-like)
+- [You may also like...](#you-may-also-like)
 
 ## Dependency
 
@@ -16,8 +19,31 @@
 - [jq](https://stedolan.github.io/jq/)
 - [pup](https://github.com/EricChiang/pup)
 - [fzf](https://github.com/junegunn/fzf)
+- [Node.js](https://nodejs.org/en/download/)
+- [cf-cookie](https://github.com/kevcui/cf-cookie/)
+- Chrome/Chromium
+
+## Installation
+
+1. Clone current repository to your local directory
+
+2. Update `cf-cookie` as submodule
+
+```bash
+$ git submodule init
+$ git submodule update
+```
+
+3. Install npm modules
+
+```bash
+$ cd bin
+$ npm i puppeteer-core puppeteer-extra puppeteer-extra-plugin-stealth commander
+```
 
 ## How to use
+
+### Usage
 
 ```
 Usage:
@@ -131,11 +157,15 @@ $ mpv "$(./soap2day-dl.sh -n 'game of' -l | grep 'https://')"
 SOAP2DAY_SUBTITLE_LANG=French ./soap2day-dl.sh -n 'game of thrones'
 ```
 
+## Limitation
+
+Current soap2day site implements Cloudflare DDoS protection. It requires the valid cf cookie to continue to visit the site. Therefore, another JS script `cf-cookie` is necessary for fetching cf cookie. It takes around 5s to get cf cookie. Once the cookie is valid, it will be stored in `./cf_clearance` and reused.
+
 ## Disclaimer
 
 The purpose of this script is to download TV series episodes and movies in order to watch them later in case when Internet is not available. Please do NOT copy or distribute downloaded materials to any third party. Watch them and delete them afterwards. Please use this script at your own responsibility.
 
-## You may like...
+## You may also like...
 
 ### What to know when the new episode of your favorite TV series or movie will be released?
 
