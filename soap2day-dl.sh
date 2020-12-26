@@ -35,7 +35,7 @@ set_var() {
     _SEARCH_URL="$_HOST/search.html?keyword="
 
     _SCRIPT_PATH=$(dirname "$(realpath "$0")")
-    _SEACH_LIST_FILE="$_SCRIPT_PATH/search.list"
+    _SEARCH_LIST_FILE="$_SCRIPT_PATH/search.list"
     _SOURCE_FILE=".source.html"
     _EPISODE_LINK_LIST=".episode.link"
     _EPISODE_TITLE_LIST=".episode.title"
@@ -118,11 +118,11 @@ search_media_by_name() {
     len="$(grep -c "class=\"thumbnail" <<< "$d")"
     [[ -z "$len" || "$len" == "0" ]] && print_error "Media not found!"
 
-    true > "$_SEACH_LIST_FILE"
+    true > "$_SEARCH_LIST_FILE"
     for i in $(seq 1 "$len"); do
         n="$($_PUP ".thumbnail:nth-child($i) h5 a:nth-child(1) text{}" <<< "$d" | sed_remove_space)"
         l="$($_PUP ".thumbnail:nth-child($i) h5 a:nth-child(1) attr{href}" <<< "$d" | sed_remove_space)"
-        echo "[$l] $n" | tee -a "$_SEACH_LIST_FILE"
+        echo "[$l] $n" | tee -a "$_SEARCH_LIST_FILE"
     done
 }
 
@@ -256,7 +256,7 @@ main() {
     fi
 
     [[ "${_MEDIA_PATH:-}" == "" ]] && print_error "Media slug not found!"
-    _MEDIA_NAME=$(sort -u "$_SEACH_LIST_FILE" \
+    _MEDIA_NAME=$(sort -u "$_SEARCH_LIST_FILE" \
                 | grep "$_MEDIA_PATH" \
                 | awk -F '] ' '{print $2}' \
                 | sed -E 's/\//_/g')
