@@ -264,15 +264,15 @@ download_media() {
     fi
 
     if [[ -z ${_LIST_LINK_ONLY:-} ]]; then
-        if [[ -z ${_DOWNLOAD_SUBTITLE_ONLY:-} ]]; then
-            print_info "Downloading video $2..."
-            $_CURL -L "$el" -g -o "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}.mp4"
-        fi
         if [[ -n "$sl" ]]; then
             print_info "Downloading subtitle $2..."
             $_CURL -L "${_HOST}${sl}" -g -o "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}_${_SUBTITLE_LANG}.srt" \
                 -H "User-Agent: ${_USER_AGENT}" \
                 -H "Cookie: cf_clearance=${_CF_CLEARANCE}"
+        fi
+        if [[ -z ${_DOWNLOAD_SUBTITLE_ONLY:-} ]]; then
+            print_info "Downloading video $2..."
+            $_CURL -L "$el" -g -o "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}.mp4"
         fi
     else
         echo "$el" >&2
