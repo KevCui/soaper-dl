@@ -42,10 +42,11 @@ set_var() {
     _EPISODE_TITLE_LIST=".episode.title"
     _SUBTITLE_LANG="${SOAP2DAY_SUBTITLE_LANG:-English}"
 
+    _USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$($_CHROME --version | awk '{print $2}') Safari/537.36"
     _CF_JS_SCRIPT="$_SCRIPT_PATH/bin/getCFcookie.js"
     _CF_FILE="$_SCRIPT_PATH/cf_clearance"
-    _USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$($_CHROME --version | awk '{print $2}') Safari/537.36"
-    _CF_CLEARANCE="$(get_cf "$_HOST")"
+    touch "$_CF_FILE"
+    _CF_CLEARANCE="$(cat "$_CF_FILE")"
 }
 
 set_args() {
@@ -97,34 +98,22 @@ sed_remove_space() {
     sed -E '/^[[:space:]]*$/d;s/^[[:space:]]+//;s/[[:space:]]+$//'
 }
 
-is_file_expired() {
-    # $1: file
-    # $2: n hours
-    local o
-    o="yes"
-
-    if [[ -f "$1" && -s "$1" ]]; then
-        local d n
-        d=$(date -d "$(date -r "$1") +$2 hours" +%s)
-        n=$(date +%s)
-
-        if [[ "$n" -lt "$d" ]]; then
-            o="no"
-        fi
-    fi
-
-    echo "$o"
-}
-
 get_cf() {
     # $1: url
-    if [[ "$(is_file_expired "$_CF_FILE" "4")" == "yes" ]]; then
-        print_info "Wait 5s for fetching cf_clearance..."
-        $_CF_JS_SCRIPT -u "$1" -a "$_USER_AGENT" -p "$_CHROME" \
-            | $_JQ -r '.[] | select(.name == "cf_clearance") | .value' \
-            | tee "$_CF_FILE"
-    else
-        cat "$_CF_FILE"
+    print_info "Wait 5s for fetching cf_clearance..."
+    $_CF_JS_SCRIPT -u "$1" -a "$_USER_AGENT" -p "$_CHROME" \
+        | $_JQ -r '.[] | select(.name == "cf_clearance") | .value' \
+        | tee "$_CF_FILE"
+}
+
+renew_cf() {
+    local s
+    s="$("$_CURL" -sS -I "$_HOST" \
+        -H "User-Agent: ${_USER_AGENT}" \
+        -H "Cookie: cf_clearance=${_CF_CLEARANCE:-}" \
+        | head -1)"
+    if [[ "$s" == *"50"* ]]; then
+        _CF_CLEARANCE="$(get_cf "$_HOST")"
     fi
 }
 
@@ -152,46 +141,35 @@ get_media_name() {
 search_media_by_name() {
     # $1: media name
     local d t len l n
+    renew_cf
     d="$($_CURL -sS "${_SEARCH_URL}$1" \
             -H "User-Agent: ${_USER_AGENT}" \
             -H "Cookie: cf_clearance=${_CF_CLEARANCE}")"
-    if grep -q "cloudflare.com/5xx-error-landing/" <<< "$d"; then
-        print_warn "cf cookie expired, run script again..."
-        rm -f "$_CF_FILE"
-        _CF_CLEARANCE="$(get_cf "$_HOST")"
-        search_media_by_name "$1"
-    else
-        t="$($_PUP ".thumbnail" <<< "$d")"
-        len="$(grep -c "class=\"thumbnail" <<< "$t")"
-        [[ -z "$len" || "$len" == "0" ]] && print_error "Media not found!"
 
-        true > "$_SEARCH_LIST_FILE"
-        for i in $(seq 1 "$len"); do
-            n="$($_PUP ".thumbnail:nth-child($i) h5 a:nth-child(1) text{}" <<< "$t" | sed_remove_space)"
-            l="$($_PUP ".thumbnail:nth-child($i) h5 a:nth-child(1) attr{href}" <<< "$t" | sed_remove_space)"
-            echo "[$l] $n" | tee -a "$_SEARCH_LIST_FILE"
-        done
-    fi
+    t="$($_PUP ".thumbnail" <<< "$d")"
+    len="$(grep -c "class=\"thumbnail" <<< "$t")"
+    [[ -z "$len" || "$len" == "0" ]] && print_error "Media not found!"
+
+    true > "$_SEARCH_LIST_FILE"
+    for i in $(seq 1 "$len"); do
+        n="$($_PUP ".thumbnail:nth-child($i) h5 a:nth-child(1) text{}" <<< "$t" | sed_remove_space)"
+        l="$($_PUP ".thumbnail:nth-child($i) h5 a:nth-child(1) attr{href}" <<< "$t" | sed_remove_space)"
+        echo "[$l] $n" | tee -a "$_SEARCH_LIST_FILE"
+    done
 }
 
 download_source() {
     local d a
     mkdir -p "$_SCRIPT_PATH/$_MEDIA_NAME"
+    renew_cf
     d="$($_CURL -sS "$_HOST/$_MEDIA_PATH" \
             -H "User-Agent: ${_USER_AGENT}" \
             -H "Cookie: cf_clearance=${_CF_CLEARANCE}")"
     a="$($_PUP ".alert-info-ex" <<< "$d")"
-    if grep -q "cloudflare.com/5xx-error-landing/" <<< "$d"; then
-        print_warn "cf cookie expired, run script again..."
-        rm -f "$_CF_FILE"
-        _CF_CLEARANCE="$(get_cf "$_HOST")"
-        download_source
+    if [[ "$_MEDIA_PATH" =~ ^"/movie_"* ]]; then
+        download_media "$_MEDIA_PATH" "$_MEDIA_NAME"
     else
-        if [[ "$_MEDIA_PATH" =~ ^"/movie_"* ]]; then
-            download_media "$_MEDIA_PATH" "$_MEDIA_NAME"
-        else
-            echo "$a" > "$_SCRIPT_PATH/$_MEDIA_NAME/$_SOURCE_FILE"
-        fi
+        echo "$a" > "$_SCRIPT_PATH/$_MEDIA_NAME/$_SOURCE_FILE"
     fi
 }
 
@@ -252,6 +230,7 @@ download_media() {
         u="${_HOST}/home/index/GetEInfoAjax"
         p="https%3A%2F%2Ff1.wewon.to"
     fi
+    renew_cf
     d="$($_CURL -sSX POST "$u" \
         -H "User-Agent: ${_USER_AGENT}" \
         -H "Cookie: cf_clearance=${_CF_CLEARANCE}" \
@@ -266,6 +245,7 @@ download_media() {
     if [[ -z ${_LIST_LINK_ONLY:-} ]]; then
         if [[ -n "$sl" ]]; then
             print_info "Downloading subtitle $2..."
+            renew_cf
             $_CURL -L "${_HOST}${sl}" -g -o "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}_${_SUBTITLE_LANG}.srt" \
                 -H "User-Agent: ${_USER_AGENT}" \
                 -H "Cookie: cf_clearance=${_CF_CLEARANCE}"
