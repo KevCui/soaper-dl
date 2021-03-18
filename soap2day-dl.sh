@@ -100,10 +100,15 @@ sed_remove_space() {
 
 get_cf() {
     # $1: url
+    local cf
     print_info "Wait 5s for fetching cf_clearance..."
-    $_CF_JS_SCRIPT -u "$1" -a "$_USER_AGENT" -p "$_CHROME" \
-        | $_JQ -r '.[] | select(.name == "cf_clearance") | .value' \
-        | tee "$_CF_FILE"
+    cf="$($_CF_JS_SCRIPT -u "$1" -a "$_USER_AGENT" -p "$_CHROME" \
+        | $_JQ -r '.[] | select(.name == "cf_clearance") | .value')"
+    if [[ -z "${cf:-}" ]]; then
+        get_cf "$_HOST"
+    else
+        echo "$cf" | tee "$_CF_FILE"
+    fi
 }
 
 renew_cf() {
