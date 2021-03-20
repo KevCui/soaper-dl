@@ -205,7 +205,7 @@ download_episodes() {
         fi
     done
 
-    IFS=" " read -ra uniqel <<< "$(printf '%s\n' "${el[@]}" | sort -u | tr '\n' ' ')"
+    IFS=" " read -ra uniqel <<< "$(printf '%s\n' "${el[@]}" | sort -u -V | tr '\n' ' ')"
 
     [[ ${#uniqel[@]} == 0 ]] && print_error "Wrong episode number!"
 
