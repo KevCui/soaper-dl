@@ -124,17 +124,16 @@ renew_cf() {
 
 get_media_id() {
     # $1: URL
-    local u
-    u=${1/tv_/}
-    u=${u/movie_/}
-    u=${u/episode_/}
-    u=${u/\//}
-    u=${u/.html/}
-    echo "$u"
+    renew_cf
+    $_CURL -sS "${_HOST}${1}" \
+        -H "User-Agent: ${_USER_AGENT}" \
+        -H "Cookie: cf_clearance=${_CF_CLEARANCE}" \
+    | $_PUP "#hId attr{value}"
 }
 
 get_media_name() {
     # $1: media link
+    renew_cf
     $_CURL -sS "${_HOST}${1}" \
         -H "User-Agent: ${_USER_AGENT}" \
         -H "Cookie: cf_clearance=${_CF_CLEARANCE}" \
@@ -163,6 +162,11 @@ search_media_by_name() {
     done
 }
 
+is_movie() {
+    # $1: media path
+    [[ "$1" =~ ^/M.* ]] && return 0 || return 1
+}
+
 download_source() {
     local d a
     mkdir -p "$_SCRIPT_PATH/$_MEDIA_NAME"
@@ -171,7 +175,7 @@ download_source() {
             -H "User-Agent: ${_USER_AGENT}" \
             -H "Cookie: cf_clearance=${_CF_CLEARANCE}")"
     a="$($_PUP ".alert-info-ex" <<< "$d")"
-    if [[ "$_MEDIA_PATH" =~ ^"/movie_"* ]]; then
+    if is_movie "$_MEDIA_PATH"; then
         download_media "$_MEDIA_PATH" "$_MEDIA_NAME"
     else
         echo "$a" > "$_SCRIPT_PATH/$_MEDIA_NAME/$_SOURCE_FILE"
@@ -228,7 +232,7 @@ download_media() {
     # $2: media name
     local id u p d el sl
     id=$(get_media_id "$1")
-    if [[ "$_MEDIA_PATH" =~ ^"/movie_"* ]]; then
+    if is_movie "$_MEDIA_PATH"; then
         u="${_HOST}/home/index/GetMInfoAjax"
         p="https%3A%2F%2Fm1.wewon.to"
     else
@@ -312,7 +316,7 @@ main() {
 
     download_source
 
-    [[ "$_MEDIA_PATH" =~ ^"/movie_"* ]] && exit 0
+    is_movie "$_MEDIA_PATH" && exit 0
 
     create_episode_list
 
