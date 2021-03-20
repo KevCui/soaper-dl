@@ -133,6 +133,8 @@ $ ./soap2day-dl.sh -p /tv_aTo2OTs.html -e 1.1-1.5
 ...
 ```
 
+:warning: The range option only works when the season number is the same. To download episodes in different seasons, for example: `... -e 1.1-1.5,2.2-2.8,3.1-3.5`
+
 - Display only video link, used to pipe into `mpv` or other media player:
 
 ```bash
