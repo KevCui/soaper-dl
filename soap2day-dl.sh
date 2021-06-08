@@ -311,7 +311,7 @@ main() {
                                     | sed -E 's/^\[//')
     fi
 
-    [[ -z "${_MEDIA_PATH:-}" ]] && print_error "Media path not found!"
+    [[ -z "${_MEDIA_PATH:-}" ]] && print_error "Media not found! Missing option -a <name> or -p <path>?"
     _MEDIA_NAME=$(sort -u "$_SEARCH_LIST_FILE" \
                 | grep "$_MEDIA_PATH" \
                 | awk -F '] ' '{print $2}' \
