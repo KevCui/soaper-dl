@@ -42,7 +42,12 @@ set_var() {
     _EPISODE_TITLE_LIST=".episode.title"
     _SUBTITLE_LANG="${SOAP2DAY_SUBTITLE_LANG:-English}"
 
-    _USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$($_CHROME --version | awk '{print $2}') Safari/537.36"
+
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        _USER_AGENT="Mozilla/5.0 ((Macintosh; Intel Mac OS X 11_4_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$($_CHROME --version | awk '{print $2}') Safari/537.36"
+    else
+        _USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$($_CHROME --version | awk '{print $2}') Safari/537.36"
+    fi
     _CF_JS_SCRIPT="$_SCRIPT_PATH/bin/getCFcookie.js"
     _CF_FILE="$_SCRIPT_PATH/cf_clearance"
     touch "$_CF_FILE"
