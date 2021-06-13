@@ -41,7 +41,7 @@ $ cd bin
 $ npm i puppeteer-core puppeteer-extra puppeteer-extra-plugin-stealth commander
 ```
 
-4. If you are on MacOS, please add Chrome alias in `~/.bashrc` or ~/.zshrc` or other shell rc file:
+4. If you are on MacOS, please add Chrome alias in `~/.bashrc` or `~/.zshrc` or other shell rc file:
 
 ```
 alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
