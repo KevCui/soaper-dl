@@ -30,7 +30,7 @@ set_var() {
     _JQ="$(command -v jq)"
     _PUP="$(command -v pup)"
     _FZF="$(command -v fzf)"
-    _CHROME="$(command -v chrome || command -v chromium)"
+    _CHROME="$(command -v chrome || command -v chromium || return_default_chrome_path)"
 
     _HOST="https://soap2day.to"
     _SEARCH_URL="$_HOST/search.html?keyword="
@@ -97,6 +97,14 @@ print_error() {
     # $1: error message
     printf "%b\n" "\033[31m[ERROR]\033[0m $1" >&2
     exit 1
+}
+
+return_default_chrome_path() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    else
+        echo "/usr/bin/chrome"
+    fi
 }
 
 sed_remove_space() {
