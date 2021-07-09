@@ -26,11 +26,14 @@ usage() {
 }
 
 set_var() {
-    _CURL="$(command -v curl)"
-    _JQ="$(command -v jq)"
-    _PUP="$(command -v pup)"
-    _FZF="$(command -v fzf)"
-    _CHROME="$(command -v chrome || command -v chromium || return_default_chrome_path)"
+    _CURL="$(command -v curl)" || command_not_found "curl"
+    _JQ="$(command -v jq)" || command_not_found "jq"
+    _PUP="$(command -v pup)" || command_not_found "pup"
+    _FZF="$(command -v fzf)" || command_not_found "fzf"
+    _CHROME="$(command -v chrome \
+        || command -v chromium \
+        || return_default_chrome_path)" \
+        || command_not_found "chrome"
 
     _HOST="https://soap2day.to"
     _SEARCH_URL="$_HOST/search.html?keyword="
@@ -42,13 +45,15 @@ set_var() {
     _EPISODE_TITLE_LIST=".episode.title"
     _SUBTITLE_LANG="${SOAP2DAY_SUBTITLE_LANG:-English}"
 
-
     if [[ "$OSTYPE" == "darwin"* ]]; then
         _USER_AGENT="Mozilla/5.0 ((Macintosh; Intel Mac OS X 11_4_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$($_CHROME --version | awk '{print $2}') Safari/537.36"
     else
         _USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$($_CHROME --version | awk '{print $2}') Safari/537.36"
     fi
+
     _CF_JS_SCRIPT="$_SCRIPT_PATH/bin/getCFcookie.js"
+    [[ ! -s "${_CF_JS_SCRIPT:-}" ]] && \
+        print_error "Cannot find ${_CF_JS_SCRIPT} or it's empty!"
     _CF_FILE="$_SCRIPT_PATH/cf_clearance"
     touch "$_CF_FILE"
     _CF_CLEARANCE="$(cat "$_CF_FILE")"
@@ -97,6 +102,11 @@ print_error() {
     # $1: error message
     printf "%b\n" "\033[31m[ERROR]\033[0m $1" >&2
     exit 1
+}
+
+command_not_found() {
+    # $1: command name
+    print_error "$1 command not found!"
 }
 
 return_default_chrome_path() {
