@@ -123,12 +123,13 @@ sed_remove_space() {
 
 get_cf() {
     # $1: url
-    local cf
+    local cf param=""
+    [[ -n "${2:-}" ]] && param="$2"
     print_info "Wait 5s for fetching cf_clearance..."
-    cf="$($_CF_JS_SCRIPT -u "$1" -a "$_USER_AGENT" -p "$_CHROME" \
+    cf="$($_CF_JS_SCRIPT -u "$1" -a "$_USER_AGENT" -p "$_CHROME" "$param" \
         | $_JQ -r '.[] | select(.name == "cf_clearance") | .value')"
     if [[ -z "${cf:-}" ]]; then
-        get_cf "$_HOST"
+        get_cf "$_HOST" "-s"
     else
         echo "$cf" | tee "$_CF_FILE"
     fi
