@@ -123,6 +123,7 @@ sed_remove_space() {
 
 get_cf() {
     # $1: url
+    # $2: additional param(s) used in $_CF_JS_SCRIPT
     local cf
     print_info "Wait 5s for fetching cf_clearance..."
     cf="$($_CF_JS_SCRIPT -u "$1" -a "$_USER_AGENT" -p "$_CHROME" "${2:-}" \
