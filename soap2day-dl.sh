@@ -44,19 +44,7 @@ set_var() {
     _EPISODE_LINK_LIST=".episode.link"
     _EPISODE_TITLE_LIST=".episode.title"
     _SUBTITLE_LANG="${SOAP2DAY_SUBTITLE_LANG:-English}"
-
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        _USER_AGENT="Mozilla/5.0 ((Macintosh; Intel Mac OS X 11_4_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$($_CHROME --version | awk '{print $2}') Safari/537.36"
-    else
-        _USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$($_CHROME --version | awk '{print $2}') Safari/537.36"
-    fi
-
-    _CF_JS_SCRIPT="$_SCRIPT_PATH/bin/getCFcookie.js"
-    [[ ! -s "${_CF_JS_SCRIPT:-}" ]] && \
-        print_error "Cannot find ${_CF_JS_SCRIPT} or it's empty!"
-    _CF_FILE="$_SCRIPT_PATH/cf_clearance"
-    touch "$_CF_FILE"
-    _CF_CLEARANCE="$(cat "$_CF_FILE")"
+    _COOKIE="$(get_cookie)"
 }
 
 set_args() {
@@ -121,46 +109,29 @@ sed_remove_space() {
     sed -E '/^[[:space:]]*$/d;s/^[[:space:]]+//;s/[[:space:]]+$//'
 }
 
-get_cf() {
+get_cookie() {
     # $1: url
-    # $2: additional param(s) used in $_CF_JS_SCRIPT
-    local cf
-    print_info "Wait 5s for fetching cf_clearance..."
-    cf="$($_CF_JS_SCRIPT -u "$1" -a "$_USER_AGENT" -p "$_CHROME" "${2:-}" \
-        | $_JQ -r '.[] | select(.name == "cf_clearance") | .value')"
-    if [[ -z "${cf:-}" ]]; then
-        get_cf "$_HOST" "-s"
-    else
-        echo "$cf" | tee "$_CF_FILE"
-    fi
-}
-
-renew_cf() {
-    local s
-    s="$("$_CURL" -sS -I "$_HOST" \
-        -H "User-Agent: ${_USER_AGENT}" \
-        -H "Cookie: cf_clearance=${_CF_CLEARANCE:-}" \
-        | head -1)"
-    if [[ "$s" == *"50"* ]]; then
-        _CF_CLEARANCE="$(get_cf "$_HOST")"
-    fi
+    local sjv="$(( 1 + RANDOM % 1000))" pidq
+    print_info "Fetching cookie..."
+    pidq="$("$_CURL" -sS -I "$_HOST/auth" -H "Cookie: sjv=${sjv}" \
+        | grep pidq \
+        | awk -F '=' '{print $2}' \
+        | sed -E "s/\r//")"
+    [[ -z "${pidq:-}" ]] && print_error "Cannot get cookie. Try again later."
+    echo -n "sjv=${sjv}; pidq=${pidq}"
 }
 
 get_media_id() {
     # $1: URL
-    renew_cf
     $_CURL -sS "${_HOST}${1}" \
-        -H "User-Agent: ${_USER_AGENT}" \
-        -H "Cookie: cf_clearance=${_CF_CLEARANCE}" \
+        -H "Cookie: ${_COOKIE}" \
     | $_PUP "#hId attr{value}"
 }
 
 get_media_name() {
     # $1: media link
-    renew_cf
     $_CURL -sS "${_HOST}${1}" \
-        -H "User-Agent: ${_USER_AGENT}" \
-        -H "Cookie: cf_clearance=${_CF_CLEARANCE}" \
+        -H "Cookie: ${_COOKIE}" \
     | $_PUP ".panel-body h4 text{}" \
     | head -1 \
     | sed_remove_space
@@ -169,10 +140,7 @@ get_media_name() {
 search_media_by_name() {
     # $1: media name
     local d t len l n
-    renew_cf
-    d="$($_CURL -sS "${_SEARCH_URL}$1" \
-            -H "User-Agent: ${_USER_AGENT}" \
-            -H "Cookie: cf_clearance=${_CF_CLEARANCE}")"
+    d="$($_CURL -sS "${_SEARCH_URL}$1" -H "Cookie: ${_COOKIE}")"
 
     t="$($_PUP ".thumbnail" <<< "$d")"
     len="$(grep -c "class=\"thumbnail" <<< "$t")"
@@ -194,10 +162,7 @@ is_movie() {
 download_source() {
     local d a
     mkdir -p "$_SCRIPT_PATH/$_MEDIA_NAME"
-    renew_cf
-    d="$($_CURL -sS "$_HOST/$_MEDIA_PATH" \
-            -H "User-Agent: ${_USER_AGENT}" \
-            -H "Cookie: cf_clearance=${_CF_CLEARANCE}")"
+    d="$($_CURL -sS "$_HOST/$_MEDIA_PATH" -H "Cookie: ${_COOKIE}")"
     a="$($_PUP ".alert-info-ex" <<< "$d")"
     if is_movie "$_MEDIA_PATH"; then
         download_media "$_MEDIA_PATH" "$_MEDIA_NAME"
@@ -263,11 +228,10 @@ download_media() {
         u="${_HOST}/home/index/GetEInfoAjax"
         p="https%3A%2F%2Ff1.wewon.to"
     fi
-    renew_cf
-    d="$($_CURL -sSX POST "$u" \
-        -H "User-Agent: ${_USER_AGENT}" \
-        -H "Cookie: cf_clearance=${_CF_CLEARANCE}" \
+    d="$("$_CURL" -sSX POST "$u" \
+        -H "Content-Type: application/x-www-form-urlencoded" \
         -H "Referer: ${_HOST}${1}" \
+        -H "Cookie: $_COOKIE" \
         --data "pass=${id}&param=${p}")"
     el="$($_JQ -r '.val' <<< "$d")"
     sl=""
@@ -278,10 +242,9 @@ download_media() {
     if [[ -z ${_LIST_LINK_ONLY:-} ]]; then
         if [[ -n "$sl" ]]; then
             print_info "Downloading subtitle $2..."
-            renew_cf
-            $_CURL -L "${_HOST}${sl}" -g -o "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}_${_SUBTITLE_LANG}.srt" \
-                -H "User-Agent: ${_USER_AGENT}" \
-                -H "Cookie: cf_clearance=${_CF_CLEARANCE}"
+            $_CURL -L "${_HOST}${sl}" -g \
+                -o "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}_${_SUBTITLE_LANG}.srt" \
+                -H "Cookie: ${_COOKIE}"
         fi
         if [[ -z ${_DOWNLOAD_SUBTITLE_ONLY:-} ]]; then
             print_info "Downloading video $2..."

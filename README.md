@@ -5,11 +5,9 @@
 ## Table of Contents
 
 - [Dependency](#dependency)
-- [Installation](#installation)
 - [How to use](#how-to-use)
   - [Usage](#usage)
   - [Example](#example)
-- [Limitation](#limitation)
 - [Disclaimer](#disclaimer)
 - [You may also like...](#you-may-also-like)
 
@@ -19,35 +17,6 @@
 - [jq](https://stedolan.github.io/jq/)
 - [pup](https://github.com/EricChiang/pup)
 - [fzf](https://github.com/junegunn/fzf)
-- [Node.js](https://nodejs.org/en/download/)
-- [cf-cookie](https://github.com/kevcui/cf-cookie/)
-- Chrome/Chromium
-
-## Installation
-
-1. Clone current repository to your local directory
-
-2. Update `cf-cookie` as submodule
-
-```bash
-$ git submodule init
-$ git submodule update
-```
-
-3. Install npm modules
-
-```bash
-$ cd bin
-$ npm i puppeteer-core puppeteer-extra puppeteer-extra-plugin-stealth commander
-```
-
-4. If you are on MacOS, please add Chrome alias in `~/.bashrc` or `~/.zshrc` or other shell rc file:
-
-```
-alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
-```
-
-Restart terminal app afterwards, and check if alias is correctly set: `command -v chrome`
 
 ## How to use
 
@@ -166,10 +135,6 @@ $ mpv "$(./soap2day-dl.sh -n 'game of' -l | grep 'https://')"
 ```
 SOAP2DAY_SUBTITLE_LANG=French ./soap2day-dl.sh -n 'game of thrones'
 ```
-
-## Limitation
-
-Current soap2day site implements Cloudflare DDoS protection. It requires the valid cf cookie to continue to visit the site. Therefore, another JS script `cf-cookie` is necessary for fetching cf cookie. It takes around 5s to get cf cookie. Once the cookie is valid, it will be stored in `./cf_clearance` and reused.
 
 ## Disclaimer
 
