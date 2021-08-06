@@ -110,7 +110,6 @@ sed_remove_space() {
 }
 
 get_cookie() {
-    # $1: url
     local sjv="$(( 1 + RANDOM % 1000))" pidq
     print_info "Fetching cookie..."
     pidq="$("$_CURL" -sS -I "$_HOST/auth" -H "Cookie: sjv=${sjv}" \
