@@ -110,14 +110,15 @@ sed_remove_space() {
 }
 
 get_cookie() {
-    local sjv="$(( 1 + RANDOM % 1000))" pidq
+    local sjv="$(( 1 + RANDOM % 1000))" auth
     print_info "Fetching cookie..."
-    pidq="$("$_CURL" -sS -I "$_HOST/auth" -H "Cookie: sjv=${sjv}" \
-        | grep pidq \
-        | awk -F '=' '{print $2}' \
-        | sed -E "s/\r//")"
-    [[ -z "${pidq:-}" ]] && print_error "Cannot get cookie. Try again later."
-    echo -n "sjv=${sjv}; pidq=${pidq}"
+    auth="$("$_CURL" -sS -I "$_HOST/auth" -H "Cookie: sjv=${sjv}" \
+        | grep -E "pidq|qt" \
+        | awk '{print $2}' \
+        | sed -E "s/\r//" \
+        | tr '\n' ';')"
+    [[ -z "${auth:-}" ]] && print_error "Cannot get cookie. Try again later."
+    echo -n "sjv=${sjv};${auth}"
 }
 
 get_media_id() {
