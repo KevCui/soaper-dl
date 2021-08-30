@@ -52,7 +52,7 @@ set_args() {
     while getopts ":hlsn:p:e:" opt; do
         case $opt in
             n)
-                _INPUT_NAME="$OPTARG"
+                _INPUT_NAME="${OPTARG// /%20}"
                 ;;
             p)
                 _MEDIA_PATH="$OPTARG"
@@ -288,7 +288,7 @@ main() {
     set_var
 
     if [[ -n "${_INPUT_NAME:-}" ]]; then
-        _MEDIA_PATH=$($_FZF -1 <<< "$(search_media_by_name "${_INPUT_NAME// /%20}")" \
+        _MEDIA_PATH=$($_FZF -1 <<< "$(search_media_by_name "$_INPUT_NAME")" \
                                     | awk -F']' '{print $1}' \
                                     | sed -E 's/^\[//')
     fi
