@@ -288,7 +288,7 @@ main() {
     set_var
 
     if [[ -n "${_INPUT_NAME:-}" ]]; then
-        _MEDIA_PATH=$($_FZF -1 <<< "$(search_media_by_name "$_INPUT_NAME")" \
+        _MEDIA_PATH=$($_FZF -1 <<< "$(search_media_by_name "${_INPUT_NAME// /%20}")" \
                                     | awk -F']' '{print $1}' \
                                     | sed -E 's/^\[//')
     fi
