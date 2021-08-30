@@ -30,10 +30,6 @@ set_var() {
     _JQ="$(command -v jq)" || command_not_found "jq"
     _PUP="$(command -v pup)" || command_not_found "pup"
     _FZF="$(command -v fzf)" || command_not_found "fzf"
-    _CHROME="$(command -v chrome \
-        || command -v chromium \
-        || return_default_chrome_path)" \
-        || command_not_found "chrome"
 
     _HOST="https://soap2day.to"
     _SEARCH_URL="$_HOST/search.html?keyword="
@@ -95,14 +91,6 @@ print_error() {
 command_not_found() {
     # $1: command name
     print_error "$1 command not found!"
-}
-
-return_default_chrome_path() {
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        echo "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-    else
-        echo "/usr/bin/chrome"
-    fi
 }
 
 sed_remove_space() {
