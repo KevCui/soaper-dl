@@ -278,7 +278,7 @@ main() {
     local mlist=""
     if [[ -n "${_INPUT_NAME:-}" ]]; then
         mlist="$(search_media_by_name "$_INPUT_NAME")"
-        _MEDIA_PATH=$($_FZF -1 <<< "$mlist" | awk -F']' '{print $1}' | sed -E 's/^\[//')
+        _MEDIA_PATH=$($_FZF -1 <<< "$(sort -u <<< "$mlist")" | awk -F']' '{print $1}' | sed -E 's/^\[//')
     fi
 
     [[ -z "${_MEDIA_PATH:-}" ]] && print_error "Media not found! Missing option -n <name> or -p <path>?"
