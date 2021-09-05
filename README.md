@@ -24,7 +24,7 @@
 
 ```
 Usage:
-  ./soap2day-dl.sh [-n <name>] [-p <path>] [-e <num1,num2,num3-num4...>] [-l] [-s]
+  ./soap2day-dl.sh [-n <name>] [-p <path>] [-e <num1,num2,num3-num4...>] [-l] [-s] [-d]
 
 Options:
   -n <name>               TV series or Movie name
@@ -37,6 +37,7 @@ Options:
                           episode range using "-"
   -l                      Optional, list video link only without downloading
   -s                      Optional, download subtitle only
+  -d                      Enable debug mode
   -h | --help             Display this help message
 ```
 

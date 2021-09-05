@@ -3,7 +3,7 @@
 # Download TV series and Movies from Soap2day using CLI
 #
 #/ Usage:
-#/   ./soap2day-dl.sh [-n <name>] [-p <path>] [-e <num1,num2,num3-num4...>] [-l] [-s]
+#/   ./soap2day-dl.sh [-n <name>] [-p <path>] [-e <num1,num2,num3-num4...>] [-l] [-s] [-d]
 #/
 #/ Options:
 #/   -n <name>               TV series or Movie name
@@ -16,6 +16,7 @@
 #/                           episode range using "-"
 #/   -l                      Optional, list video link only without downloading
 #/   -s                      Optional, download subtitle only
+#/   -d                      Enable debug mode
 #/   -h | --help             Display this help message
 
 set -e
@@ -45,7 +46,7 @@ set_var() {
 
 set_args() {
     expr "$*" : ".*--help" > /dev/null && usage
-    while getopts ":hlsn:p:e:" opt; do
+    while getopts ":hlsdn:p:e:" opt; do
         case $opt in
             n)
                 _INPUT_NAME="${OPTARG// /%20}"
@@ -61,6 +62,10 @@ set_args() {
                 ;;
             s)
                 _DOWNLOAD_SUBTITLE_ONLY=true
+                ;;
+            d)
+                _DEBUG_MODE=true
+                set -x
                 ;;
             h)
                 usage
