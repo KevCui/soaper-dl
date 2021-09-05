@@ -28,17 +28,16 @@ Usage:
 
 Options:
   -n <name>               TV series or Movie name
-  -p <path>               Media path
-                          e.g: /tv_XXXXXXXX.html
+  -p <path>               media path, e.g: /tv_XXXXXXXX.html
                           ingored when "-n" is enabled
-  -e <num1,num3-num4...>  Optional, episode number to download
+  -e <num1,num3-num4...>  optional, episode number to download
                           e.g: episode number "3.2" means Season 3 Episode 2
                           multiple episode numbers seperated by ","
                           episode range using "-"
-  -l                      Optional, list video link only without downloading
-  -s                      Optional, download subtitle only
-  -d                      Enable debug mode
-  -h | --help             Display this help message
+  -l                      optional, list video link only without downloading
+  -s                      optional, download subtitle only
+  -d                      enable debug mode
+  -h | --help             display this help message
 ```
 
 ### Example
