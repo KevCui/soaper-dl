@@ -218,7 +218,7 @@ download_media() {
         p="https%3A%2F%2Fm1.wewon.to"
     else
         u="${_HOST}/home/index/GetEInfoAjax"
-        p="https%3A%2F%2Ff1.wewon.to"
+        p="https%3A%2F%2Fd3.wewon.to"
     fi
     d="$("$_CURL" -sSX POST "$u" \
         -H "Content-Type: application/x-www-form-urlencoded" \
