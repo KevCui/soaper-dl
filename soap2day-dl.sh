@@ -215,10 +215,10 @@ download_media() {
     id=$(get_media_id "$1")
     if is_movie "$_MEDIA_PATH"; then
         u="${_HOST}/home/index/GetMInfoAjax"
-        p="https%3A%2F%2Fm1.wewon.to"
+        p="https%3A%2F%2Fq14.mrqls.to"
     else
         u="${_HOST}/home/index/GetEInfoAjax"
-        p="https%3A%2F%2Fd3.wewon.to"
+        p="https%3A%2F%2Ff4.mrqls.to"
     fi
     d="$("$_CURL" -sSX POST "$u" \
         -H "Content-Type: application/x-www-form-urlencoded" \
