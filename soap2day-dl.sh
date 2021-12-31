@@ -257,7 +257,7 @@ download_media() {
             fi
         fi
     else
-        echo "$el" >&2
+        echo "$el"
     fi
 }
 

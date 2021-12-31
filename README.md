@@ -116,7 +116,7 @@ $ ./soap2day-dl.sh -p /tv_aTo2OTs.html -e 1.1-1.5
 - Display only video link, used to pipe into `mpv` or other media player:
 
 ```bash
-$ mpv "$(./soap2day-dl.sh-dl.sh -p /tv_aTo2Mjs.html -e 1.1 -l)"
+$ mpv "$(./soap2day-dl.sh -p /tv_aTo2Mjs.html -e 1.1 -l)"
 ```
 
 OR the interactive way:
