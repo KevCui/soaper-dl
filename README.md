@@ -24,7 +24,7 @@
 
 ```
 Usage:
-  ./soap2day-dl.sh [-n <name>] [-p <path>] [-e <num1,num2,num3-num4...>] [-l] [-s] [-d]
+  ./soap2day-dl.sh [-n <name>] [-p <path>] [-e <num1,num2,num3-num4...>] [-l] [-s] [-x <command>] [-d]
 
 Options:
   -n <name>               TV series or Movie name
@@ -36,6 +36,7 @@ Options:
                           episode range using "-"
   -l                      optional, list video link only without downloading
   -s                      optional, download subtitle only
+  -x                      optional, call external download utility
   -d                      enable debug mode
   -h | --help             display this help message
 ```
@@ -134,6 +135,12 @@ $ mpv "$(./soap2day-dl.sh -n 'game of' -l | grep 'https://')"
 
 ```
 SOAP2DAY_SUBTITLE_LANG=French ./soap2day-dl.sh -n 'game of thrones'
+```
+
+- Use external download utility instead of `curl`, for example using `aria2c`:
+
+```
+./soap2day-dl.sh -n 'game of thrones' -e 1.1 -x 'aria2c -x 16'
 ```
 
 ## Disclaimer

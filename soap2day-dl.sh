@@ -3,7 +3,7 @@
 # Download TV series and Movies from Soap2day using CLI
 #
 #/ Usage:
-#/   ./soap2day-dl.sh [-n <name>] [-p <path>] [-e <num1,num2,num3-num4...>] [-l] [-s] [-d]
+#/   ./soap2day-dl.sh [-n <name>] [-p <path>] [-e <num1,num2,num3-num4...>] [-l] [-s] [-x <command>] [-d]
 #/
 #/ Options:
 #/   -n <name>               TV series or Movie name
@@ -15,6 +15,7 @@
 #/                           episode range using "-"
 #/   -l                      optional, list video link only without downloading
 #/   -s                      optional, download subtitle only
+#/   -x                      optional, call external download utility
 #/   -d                      enable debug mode
 #/   -h | --help             display this help message
 
@@ -45,7 +46,7 @@ set_var() {
 
 set_args() {
     expr "$*" : ".*--help" > /dev/null && usage
-    while getopts ":hlsdn:p:e:" opt; do
+    while getopts ":hlsdn:x:p:e:" opt; do
         case $opt in
             n)
                 _INPUT_NAME="${OPTARG// /%20}"
@@ -61,6 +62,9 @@ set_args() {
                 ;;
             s)
                 _DOWNLOAD_SUBTITLE_ONLY=true
+                ;;
+            x)
+                _EXTERNAL_COMMAND="$OPTARG"
                 ;;
             d)
                 _DEBUG_MODE=true
@@ -211,7 +215,7 @@ download_episode() {
 download_media() {
     # $1: media link
     # $2: media name
-    local id u p d el sl
+    local id u p d el sl currdir
     id=$(get_media_id "$1")
     if is_movie "$_MEDIA_PATH"; then
         u="${_HOST}/home/index/GetMInfoAjax"
@@ -240,7 +244,17 @@ download_media() {
         fi
         if [[ -z ${_DOWNLOAD_SUBTITLE_ONLY:-} ]]; then
             print_info "Downloading video $2..."
-            $_CURL -L "$el" -g -o "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}.mp4"
+
+            if [[ -z ${_EXTERNAL_COMMAND:-} ]]; then
+                $_CURL -L "$el" -g -o "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}.mp4"
+            else
+                el="${el//\?/\\\?}"
+                el="${el//\&/\\\&}"
+                currdir="$(pwd)"
+                cd "$_SCRIPT_PATH/${_MEDIA_NAME}"
+                eval "$_EXTERNAL_COMMAND $el"
+                cd "$currdir"
+            fi
         fi
     else
         echo "$el" >&2
