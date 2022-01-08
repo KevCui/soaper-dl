@@ -40,6 +40,7 @@ set_var() {
     _SOURCE_FILE=".source.html"
     _EPISODE_LINK_LIST=".episode.link"
     _EPISODE_TITLE_LIST=".episode.title"
+    _MEDIA_HTML=".media.html"
     _SUBTITLE_LANG="${SOAP2DAY_SUBTITLE_LANG:-English}"
     _COOKIE="$(get_cookie)"
 }
@@ -117,18 +118,11 @@ get_cookie() {
     echo -n "sjv=${sjv};${auth}"
 }
 
-get_media_host() {
+download_media_html() {
     # $1: media link
-    $_CURL -sS "${_HOST}${1}" \
+    "$_CURL" -sS "${_HOST}${1}" \
         -H "Cookie: ${_COOKIE}" \
-    | $_PUP "#divU text{}"
-}
-
-get_media_id() {
-    # $1: URL
-    $_CURL -sS "${_HOST}${1}" \
-        -H "Cookie: ${_COOKIE}" \
-    | $_PUP "#hId attr{value}"
+    > "$_SCRIPT_PATH/$_MEDIA_NAME/$_MEDIA_HTML"
 }
 
 get_media_name() {
@@ -223,8 +217,9 @@ download_media() {
     # $1: media link
     # $2: media name
     local id u h d el sl currdir
-    id=$(get_media_id "$1")
-    h=$(get_media_host "$1")
+    download_media_html "$1"
+    id="$($_PUP "#hId attr{value}" < "$_SCRIPT_PATH/$_MEDIA_NAME/$_MEDIA_HTML")"
+    h="$($_PUP "#divU text{}" < "$_SCRIPT_PATH/$_MEDIA_NAME/$_MEDIA_HTML")"
     is_movie "$_MEDIA_PATH" && u="GetMInfoAjax" || u="GetEInfoAjax"
     d="$("$_CURL" -sSX POST "${_HOST}/home/index/${u}" \
         -H "Content-Type: application/x-www-form-urlencoded" \
