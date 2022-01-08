@@ -117,6 +117,13 @@ get_cookie() {
     echo -n "sjv=${sjv};${auth}"
 }
 
+get_media_host() {
+    # $1: media link
+    $_CURL -sS "${_HOST}${1}" \
+        -H "Cookie: ${_COOKIE}" \
+    | $_PUP "#divU text{}"
+}
+
 get_media_id() {
     # $1: URL
     $_CURL -sS "${_HOST}${1}" \
@@ -215,20 +222,15 @@ download_episode() {
 download_media() {
     # $1: media link
     # $2: media name
-    local id u p d el sl currdir
+    local id u h d el sl currdir
     id=$(get_media_id "$1")
-    if is_movie "$_MEDIA_PATH"; then
-        u="${_HOST}/home/index/GetMInfoAjax"
-        p="https%3A%2F%2Fq14.mrqls.to"
-    else
-        u="${_HOST}/home/index/GetEInfoAjax"
-        p="https%3A%2F%2Ff4.mrqls.to"
-    fi
-    d="$("$_CURL" -sSX POST "$u" \
+    h=$(get_media_host "$1")
+    is_movie "$_MEDIA_PATH" && u="GetMInfoAjax" || u="GetEInfoAjax"
+    d="$("$_CURL" -sSX POST "${_HOST}/home/index/${u}" \
         -H "Content-Type: application/x-www-form-urlencoded" \
         -H "Referer: ${_HOST}${1}" \
         -H "Cookie: $_COOKIE" \
-        --data "pass=${id}&param=${p}")"
+        --data "pass=${id}&param=${h}")"
     el="$($_JQ -r '.val' <<< "$d")"
     sl=""
     if [[ "$($_JQ '.subs | length' <<< "$d")" -gt "0" ]]; then
