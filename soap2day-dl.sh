@@ -32,7 +32,7 @@ set_var() {
     _PUP="$(command -v pup)" || command_not_found "pup"
     _FZF="$(command -v fzf)" || command_not_found "fzf"
 
-    _HOST="https://soap2day.ac"
+    _HOST="https://soap2day.cx"
     _SEARCH_URL="$_HOST/search.html?keyword="
 
     _SCRIPT_PATH=$(dirname "$(realpath "$0")")
