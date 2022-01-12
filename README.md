@@ -5,6 +5,7 @@
 ## Table of Contents
 
 - [Dependency](#dependency)
+- [Installation](#installation)
 - [How to use](#how-to-use)
   - [Usage](#usage)
   - [Example](#example)
@@ -17,6 +18,17 @@
 - [jq](https://stedolan.github.io/jq/)
 - [pup](https://github.com/EricChiang/pup)
 - [fzf](https://github.com/junegunn/fzf)
+- [Node.js](https://nodejs.org/en/download/)
+- Chrome / Chromium browser
+
+## Installation
+
+- Install `puppeteer-core` package:
+
+```
+$ cd bin
+$ npm i puppeteer-core
+```
 
 ## How to use
 

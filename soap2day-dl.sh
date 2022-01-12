@@ -31,17 +31,22 @@ set_var() {
     _JQ="$(command -v jq)" || command_not_found "jq"
     _PUP="$(command -v pup)" || command_not_found "pup"
     _FZF="$(command -v fzf)" || command_not_found "fzf"
+    _CHROME="$(command -v chromium)" || "$(command -v chrome)" || return_default_chrome_path
 
-    _HOST="https://soap2day.cx"
-    _SEARCH_URL="$_HOST/search.html?keyword="
+    _HOST="https://soap2day.ac"
+    _SEARCH_URL="$_HOST/search/keyword/"
 
     _SCRIPT_PATH=$(dirname "$(realpath "$0")")
-    _SEARCH_LIST_FILE="$_SCRIPT_PATH/search.list"
+    _SEARCH_LIST_FILE="${_SCRIPT_PATH}/search.list"
     _SOURCE_FILE=".source.html"
     _EPISODE_LINK_LIST=".episode.link"
     _EPISODE_TITLE_LIST=".episode.title"
     _MEDIA_HTML=".media.html"
     _SUBTITLE_LANG="${SOAP2DAY_SUBTITLE_LANG:-English}"
+
+    _USER_AGENT_LIST="${_SCRIPT_PATH}/user-agent.list"
+    _USER_AGENT="$(get_user_agent)"
+    _GET_COOKIE_JS="${_SCRIPT_PATH}/bin/getCookie.js"
     _COOKIE="$(get_cookie)"
 }
 
@@ -102,25 +107,37 @@ command_not_found() {
     print_error "$1 command not found!"
 }
 
+return_default_chrome_path() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    else
+        echo "/usr/bin/chrome"
+    fi
+}
+
 sed_remove_space() {
     sed -E '/^[[:space:]]*$/d;s/^[[:space:]]+//;s/[[:space:]]+$//'
 }
 
+get_user_agent() {
+    sort -R "$_USER_AGENT_LIST" | tail -1
+}
+
 get_cookie() {
-    local sjv="$(( 1 + RANDOM % 1000))" auth
+    local c
     print_info "Fetching cookie..."
-    auth="$("$_CURL" -sS -I "$_HOST/auth" -H "Cookie: sjv=${sjv}" \
-        | grep -E "pidq|qt" \
-        | awk '{print $2}' \
-        | sed -E "s/\r//" \
+    c="$("$_GET_COOKIE_JS" "$_CHROME" "$_HOST" "$_USER_AGENT" \
+        | "$_JQ" -r '.[] | "\(.name)=\(.value)"' \
+        | grep -E 'sjv=|pidq=|qt=|uo=' \
         | tr '\n' ';')"
-    [[ -z "${auth:-}" ]] && print_error "Cannot get cookie. Try again later."
-    echo -n "sjv=${sjv};${auth}"
+    [[ -z "${c:-}" ]] && print_error "Cannot get cookie. Try again later."
+    echo -n "${c:-}"
 }
 
 download_media_html() {
     # $1: media link
     "$_CURL" -sS "${_HOST}${1}" \
+        -A "$_USER_AGENT" \
         -H "Cookie: ${_COOKIE}" \
     > "$_SCRIPT_PATH/$_MEDIA_NAME/$_MEDIA_HTML"
 }
@@ -128,6 +145,7 @@ download_media_html() {
 get_media_name() {
     # $1: media link
     $_CURL -sS "${_HOST}${1}" \
+        -A "$_USER_AGENT" \
         -H "Cookie: ${_COOKIE}" \
     | $_PUP ".panel-body h4 text{}" \
     | head -1 \
@@ -137,7 +155,7 @@ get_media_name() {
 search_media_by_name() {
     # $1: media name
     local d t len l n
-    d="$($_CURL -sS "${_SEARCH_URL}$1" -H "Cookie: ${_COOKIE}")"
+    d="$($_CURL -sS "${_SEARCH_URL}$1" -H "Cookie: ${_COOKIE}" -A "$_USER_AGENT")"
 
     t="$($_PUP ".thumbnail" <<< "$d")"
     len="$(grep -c "class=\"thumbnail" <<< "$t")"
@@ -159,7 +177,7 @@ is_movie() {
 download_source() {
     local d a
     mkdir -p "$_SCRIPT_PATH/$_MEDIA_NAME"
-    d="$($_CURL -sS "$_HOST/$_MEDIA_PATH" -H "Cookie: ${_COOKIE}")"
+    d="$($_CURL -sS "$_HOST/$_MEDIA_PATH" -H "Cookie: ${_COOKIE}" -A "$_USER_AGENT")"
     a="$($_PUP ".alert-info-ex" <<< "$d")"
     if is_movie "$_MEDIA_PATH"; then
         download_media "$_MEDIA_PATH" "$_MEDIA_NAME"
@@ -222,6 +240,7 @@ download_media() {
     h="$($_PUP "#divU text{}" < "$_SCRIPT_PATH/$_MEDIA_NAME/$_MEDIA_HTML")"
     is_movie "$_MEDIA_PATH" && u="GetMInfoAjax" || u="GetEInfoAjax"
     d="$("$_CURL" -sSX POST "${_HOST}/home/index/${u}" \
+        -A "$_USER_AGENT" \
         -H "Content-Type: application/x-www-form-urlencoded" \
         -H "Referer: ${_HOST}${1}" \
         -H "Cookie: $_COOKIE" \
