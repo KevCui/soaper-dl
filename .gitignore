@@ -1,0 +1,6 @@
+*.mp4
+*.html
+.episode.*
+search.list
+*/*
+!bin/*.js
