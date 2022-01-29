@@ -44,7 +44,6 @@ set_var() {
     _MEDIA_HTML=".media.html"
     _SUBTITLE_LANG="${SOAP2DAY_SUBTITLE_LANG:-English}"
 
-    _DUMP_HTML_JS="${_SCRIPT_PATH}/bin/dumpHTML.js"
     _GET_RESPONSE_JS="${_SCRIPT_PATH}/bin/getResponse.js"
     _FETCH_FILE_JS="${_SCRIPT_PATH}/bin/fetchFile.js"
 }
@@ -124,12 +123,12 @@ get_user_agent() {
 
 download_media_html() {
     # $1: media link
-    "$_DUMP_HTML_JS" "$_CHROME" "$_HOST" "${_HOST}${1}" > "$_SCRIPT_PATH/$_MEDIA_NAME/$_MEDIA_HTML"
+    "$_FETCH_FILE_JS" "$_CHROME" "$_HOST" "${_HOST}${1}" > "$_SCRIPT_PATH/$_MEDIA_NAME/$_MEDIA_HTML"
 }
 
 get_media_name() {
     # $1: media link
-    "$_DUMP_HTML_JS" "$_CHROME" "$_HOST"" ${_HOST}${1}" \
+    "$_FETCH_FILE_JS" "$_CHROME" "$_HOST"" ${_HOST}${1}" \
         | $_PUP ".panel-body h4 text{}" \
         | head -1 \
         | sed_remove_space
@@ -138,7 +137,7 @@ get_media_name() {
 search_media_by_name() {
     # $1: media name
     local d t len l n
-    d="$("$_DUMP_HTML_JS" "$_CHROME" "$_HOST" "${_SEARCH_URL}$1")"
+    d="$("$_FETCH_FILE_JS" "$_CHROME" "$_HOST" "${_SEARCH_URL}$1")"
     t="$($_PUP ".thumbnail" <<< "$d")"
     len="$(grep -c "class=\"thumbnail" <<< "$t")"
     [[ -z "$len" || "$len" == "0" ]] && print_error "Media not found!"
@@ -159,7 +158,7 @@ is_movie() {
 download_source() {
     local d a
     mkdir -p "$_SCRIPT_PATH/$_MEDIA_NAME"
-    d="$("$_DUMP_HTML_JS" "$_CHROME" "$_HOST" "${_HOST}${_MEDIA_PATH}")"
+    d="$("$_FETCH_FILE_JS" "$_CHROME" "$_HOST" "${_HOST}${_MEDIA_PATH}")"
     a="$($_PUP ".alert-info-ex" <<< "$d")"
     if is_movie "$_MEDIA_PATH"; then
         download_media "$_MEDIA_PATH" "$_MEDIA_NAME"
