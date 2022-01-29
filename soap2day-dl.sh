@@ -44,10 +44,9 @@ set_var() {
     _MEDIA_HTML=".media.html"
     _SUBTITLE_LANG="${SOAP2DAY_SUBTITLE_LANG:-English}"
 
-    _USER_AGENT_LIST="${_SCRIPT_PATH}/user-agent.list"
-    _USER_AGENT="$(get_user_agent)"
-    _GET_COOKIE_JS="${_SCRIPT_PATH}/bin/getCookie.js"
-    _COOKIE="$(get_cookie)"
+    _DUMP_HTML_JS="${_SCRIPT_PATH}/bin/dumpHTML.js"
+    _GET_RESPONSE_JS="${_SCRIPT_PATH}/bin/getResponse.js"
+    _FETCH_FILE_JS="${_SCRIPT_PATH}/bin/fetchFile.js"
 }
 
 set_args() {
@@ -123,40 +122,23 @@ get_user_agent() {
     sort -R "$_USER_AGENT_LIST" | tail -1
 }
 
-get_cookie() {
-    local c
-    print_info "Fetching cookie..."
-    c="$("$_GET_COOKIE_JS" "$_CHROME" "$_HOST" "$_USER_AGENT" \
-        | "$_JQ" -r '.[] | "\(.name)=\(.value)"' \
-        | grep -E 'sjv=|pidq=|qt=|uo=' \
-        | tr '\n' ';')"
-    [[ -z "${c:-}" ]] && print_error "Cannot get cookie. Try again later."
-    echo -n "${c:-}"
-}
-
 download_media_html() {
     # $1: media link
-    "$_CURL" -sS "${_HOST}${1}" \
-        -A "$_USER_AGENT" \
-        -H "Cookie: ${_COOKIE}" \
-    > "$_SCRIPT_PATH/$_MEDIA_NAME/$_MEDIA_HTML"
+    "$_DUMP_HTML_JS" "$_CHROME" "$_HOST" "${_HOST}${1}" > "$_SCRIPT_PATH/$_MEDIA_NAME/$_MEDIA_HTML"
 }
 
 get_media_name() {
     # $1: media link
-    $_CURL -sS "${_HOST}${1}" \
-        -A "$_USER_AGENT" \
-        -H "Cookie: ${_COOKIE}" \
-    | $_PUP ".panel-body h4 text{}" \
-    | head -1 \
-    | sed_remove_space
+    "$_DUMP_HTML_JS" "$_CHROME" "$_HOST"" ${_HOST}${1}" \
+        | $_PUP ".panel-body h4 text{}" \
+        | head -1 \
+        | sed_remove_space
 }
 
 search_media_by_name() {
     # $1: media name
     local d t len l n
-    d="$($_CURL -sS "${_SEARCH_URL}$1" -H "Cookie: ${_COOKIE}" -A "$_USER_AGENT")"
-
+    d="$("$_DUMP_HTML_JS" "$_CHROME" "$_HOST" "${_SEARCH_URL}$1")"
     t="$($_PUP ".thumbnail" <<< "$d")"
     len="$(grep -c "class=\"thumbnail" <<< "$t")"
     [[ -z "$len" || "$len" == "0" ]] && print_error "Media not found!"
@@ -177,7 +159,7 @@ is_movie() {
 download_source() {
     local d a
     mkdir -p "$_SCRIPT_PATH/$_MEDIA_NAME"
-    d="$($_CURL -sS "$_HOST/$_MEDIA_PATH" -H "Cookie: ${_COOKIE}" -A "$_USER_AGENT")"
+    d="$("$_DUMP_HTML_JS" "$_CHROME" "$_HOST" "${_HOST}${_MEDIA_PATH}")"
     a="$($_PUP ".alert-info-ex" <<< "$d")"
     if is_movie "$_MEDIA_PATH"; then
         download_media "$_MEDIA_PATH" "$_MEDIA_NAME"
@@ -234,17 +216,10 @@ download_episode() {
 download_media() {
     # $1: media link
     # $2: media name
-    local id u h d el sl currdir
+    local u d el sl currdir
     download_media_html "$1"
-    id="$($_PUP "#hId attr{value}" < "$_SCRIPT_PATH/$_MEDIA_NAME/$_MEDIA_HTML")"
-    h="$($_PUP "#divU text{}" < "$_SCRIPT_PATH/$_MEDIA_NAME/$_MEDIA_HTML")"
     is_movie "$_MEDIA_PATH" && u="GetMInfoAjax" || u="GetEInfoAjax"
-    d="$("$_CURL" -sSX POST "${_HOST}/home/index/${u}" \
-        -A "$_USER_AGENT" \
-        -H "Content-Type: application/x-www-form-urlencoded" \
-        -H "Referer: ${_HOST}${1}" \
-        -H "Cookie: $_COOKIE" \
-        --data "pass=${id}&param=${h}")"
+    d="$("$_GET_RESPONSE_JS" "${_CHROME}" "${_HOST}/home/index/${u}" "${_HOST}${1}")"
     el="$($_JQ -r '.val' <<< "$d")"
     sl=""
     if [[ "$($_JQ '.subs | length' <<< "$d")" -gt "0" ]]; then
@@ -254,9 +229,8 @@ download_media() {
     if [[ -z ${_LIST_LINK_ONLY:-} ]]; then
         if [[ -n "$sl" ]]; then
             print_info "Downloading subtitle $2..."
-            $_CURL -L "${_HOST}${sl}" -g \
-                -o "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}_${_SUBTITLE_LANG}.srt" \
-                -H "Cookie: ${_COOKIE}"
+            "$_FETCH_FILE_JS" "$_CHROME" "${_HOST}" "${_HOST}${sl}" \
+                > "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}_${_SUBTITLE_LANG}.srt"
         fi
         if [[ -z ${_DOWNLOAD_SUBTITLE_ONLY:-} ]]; then
             print_info "Downloading video $2..."

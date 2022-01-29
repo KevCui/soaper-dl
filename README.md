@@ -5,7 +5,7 @@
 ## Table of Contents
 
 - [Dependency](#dependency)
-- [Installation](#installation)
+- [Installation](#)
 - [How to use](#how-to-use)
   - [Usage](#usage)
   - [Example](#example)
@@ -23,11 +23,11 @@
 
 ## Installation
 
-- Install `puppeteer-core` package:
+- Install npm packages:
 
 ```
 $ cd bin
-$ npm i puppeteer-core
+$ npm i puppeteer-extra puppeteer-extra-plugin-stealth
 ```
 
 ## How to use
