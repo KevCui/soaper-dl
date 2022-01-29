@@ -255,7 +255,7 @@ download_media() {
 }
 
 create_episode_list() {
-    local slen elen sf t l sn se et el
+    local sf t l sn et el
     sf="$_SCRIPT_PATH/$_MEDIA_NAME/$_SOURCE_FILE"
     el="$_SCRIPT_PATH/$_MEDIA_NAME/$_EPISODE_LINK_LIST"
     et="$_SCRIPT_PATH/$_MEDIA_NAME/$_EPISODE_TITLE_LIST"
@@ -264,14 +264,16 @@ create_episode_list() {
     true > "$el"
     for i in $(seq "$slen" -1 1); do
         sn=$((slen - i + 1))
-        elen="$($_PUP ".alert-info-ex:nth-child($i)" < "$sf" | grep -c "myp1\"")"
-        for j in $(seq "$elen" -1 1); do
-            se=$((elen - j + 1))
-            t="$($_PUP ".alert-info-ex:nth-child($i) div:nth-child(4) div:nth-child($j) text{}" < "$sf" | sed_remove_space)"
-            l="$($_PUP ".alert-info-ex:nth-child($i) div:nth-child(4) div:nth-child($j) a attr{href}" < "$sf")"
-            echo "[${sn}.${se}] $t" >> "$et"
-            echo "[${sn}.${se}] $l" >> "$el"
-        done
+        t="$($_PUP ".alert-info-ex:nth-child($i) div text{}" < "$sf" \
+            | sed_remove_space \
+            | tac \
+            | awk '{print "[" num  "." NR "] " $0}' num="${sn}")"
+        l="$($_PUP ".alert-info-ex:nth-child($i) div a attr{href}" < "$sf" \
+            | sed_remove_space \
+            | tac \
+            | awk '{print "[" num  "." NR "] " $0}' num="${sn}")"
+        echo "$t" >> "$et"
+        echo "$l" >> "$el"
     done
 }
 
