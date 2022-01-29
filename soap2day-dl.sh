@@ -121,14 +121,19 @@ get_user_agent() {
     sort -R "$_USER_AGENT_LIST" | tail -1
 }
 
+fetch_file() {
+    # $1: url
+    "$_FETCH_FILE_JS" "$_CHROME" "$_HOST" "$1"
+}
+
 download_media_html() {
     # $1: media link
-    "$_FETCH_FILE_JS" "$_CHROME" "$_HOST" "${_HOST}${1}" > "$_SCRIPT_PATH/$_MEDIA_NAME/$_MEDIA_HTML"
+    fetch_file "${_HOST}${1}" > "$_SCRIPT_PATH/$_MEDIA_NAME/$_MEDIA_HTML"
 }
 
 get_media_name() {
     # $1: media link
-    "$_FETCH_FILE_JS" "$_CHROME" "$_HOST"" ${_HOST}${1}" \
+    fetch_file "${_HOST}${1}" \
         | $_PUP ".panel-body h4 text{}" \
         | head -1 \
         | sed_remove_space
@@ -137,7 +142,7 @@ get_media_name() {
 search_media_by_name() {
     # $1: media name
     local d t len l n
-    d="$("$_FETCH_FILE_JS" "$_CHROME" "$_HOST" "${_SEARCH_URL}$1")"
+    d="$(fetch_file "${_SEARCH_URL}$1")"
     t="$($_PUP ".thumbnail" <<< "$d")"
     len="$(grep -c "class=\"thumbnail" <<< "$t")"
     [[ -z "$len" || "$len" == "0" ]] && print_error "Media not found!"
@@ -158,7 +163,7 @@ is_movie() {
 download_source() {
     local d a
     mkdir -p "$_SCRIPT_PATH/$_MEDIA_NAME"
-    d="$("$_FETCH_FILE_JS" "$_CHROME" "$_HOST" "${_HOST}${_MEDIA_PATH}")"
+    d="$(fetch_file "${_HOST}${_MEDIA_PATH}")"
     a="$($_PUP ".alert-info-ex" <<< "$d")"
     if is_movie "$_MEDIA_PATH"; then
         download_media "$_MEDIA_PATH" "$_MEDIA_NAME"
@@ -228,8 +233,7 @@ download_media() {
     if [[ -z ${_LIST_LINK_ONLY:-} ]]; then
         if [[ -n "$sl" ]]; then
             print_info "Downloading subtitle $2..."
-            "$_FETCH_FILE_JS" "$_CHROME" "${_HOST}" "${_HOST}${sl}" \
-                > "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}_${_SUBTITLE_LANG}.srt"
+            fetch_file "${_HOST}${sl}" > "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}_${_SUBTITLE_LANG}.srt"
         fi
         if [[ -z ${_DOWNLOAD_SUBTITLE_ONLY:-} ]]; then
             print_info "Downloading video $2..."
