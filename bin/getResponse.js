@@ -18,6 +18,6 @@ const pageUrl = process.argv[4];
   await page.click('.btn');
   await page.waitForNavigation();
   const res = await page.waitForResponse(response => response.url().includes(requestUrl));
-  console.log(await res.json()); 
+  console.log(await res.json());
   await browser.close();
 })();
