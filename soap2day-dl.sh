@@ -213,13 +213,12 @@ download_media() {
     is_movie "$_MEDIA_PATH" && u="GetMInfoAjax" || u="GetEInfoAjax"
     d="$("$_GET_RESPONSE_JS" "${_CHROME}" "${_HOST}/home/index/${u}" "${_HOST}${1}")"
     el="$($_JQ -r '.val' <<< "$d")"
-    sl=""
     if [[ "$($_JQ '.subs | length' <<< "$d")" -gt "0" ]]; then
         sl="$($_JQ -r '.subs[]| select(.name == "'"$_SUBTITLE_LANG"'") | .path' <<< "$d")"
     fi
 
     if [[ -z ${_LIST_LINK_ONLY:-} ]]; then
-        if [[ -n "$sl" ]]; then
+        if [[ -n "${sl:-}" ]]; then
             print_info "Downloading subtitle $2..."
             fetch_file "${_HOST}${sl}" > "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}_${_SUBTITLE_LANG}.srt"
         fi
@@ -238,7 +237,13 @@ download_media() {
             fi
         fi
     else
-        [[ -z ${_DOWNLOAD_SUBTITLE_ONLY:-} ]] && echo "$el" || echo "${_HOST}${sl}"
+        if [[ -z ${_DOWNLOAD_SUBTITLE_ONLY:-} ]]; then
+            echo "$el"
+        else
+            if [[ -n "${sl:-}" ]]; then
+                echo "${_HOST}${sl}"
+            fi
+        fi
     fi
 }
 
