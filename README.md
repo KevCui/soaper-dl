@@ -46,7 +46,7 @@ Options:
                           e.g: episode number "3.2" means Season 3 Episode 2
                           multiple episode numbers seperated by ","
                           episode range using "-"
-  -l                      optional, list video link only without downloading
+  -l                      optional, list video or subtitle link without downloading
   -s                      optional, download subtitle only
   -x                      optional, call external download utility
   -d                      enable debug mode
