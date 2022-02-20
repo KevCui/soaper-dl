@@ -49,7 +49,7 @@ set_var() {
 
     _COOKIE_FILE="${_SCRIPT_PATH}/cookie.json"
     _GET_COOKIE_JS="${_SCRIPT_PATH}/bin/getCookie.js"
-    _USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$($_CHROME --version | awk '{print $2}') Safari/537.36"
+    _USER_AGENT="Mozilla/5.0 (Linux; Android 7.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$($_CHROME --version | awk '{print $2}') Mobile Safari/537.36"
     _COOKIE="$(get_cookie)"
 
     if [[ -f "${_SCRIPT_PATH}/bin/curl-impersonate" ]]; then
@@ -182,7 +182,7 @@ search_media_by_name() {
     d="$(fetch_file "${_SEARCH_URL}$1")"
     t="$($_PUP ".thumbnail" <<< "$d")"
     len="$(grep -c "class=\"thumbnail" <<< "$t")"
-    [[ -z "$len" || "$len" == "0" ]] && print_error "Media not found!"
+    [[ -z "$len" || "$len" == "0" ]] && (rm -f "$_COOKIE_FILE"; print_error "Media not found!")
 
     true > "$_SEARCH_LIST_FILE"
     for i in $(seq 1 "$len"); do
