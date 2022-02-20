@@ -260,7 +260,7 @@ download_media() {
     local u d el sl currdir
     download_media_html "$1"
     is_movie "$_MEDIA_PATH" && u="GetMInfoAjax" || u="GetEInfoAjax"
-    d="$("$_GET_RESPONSE_JS" "${_CHROME}" "${_HOST}/home/index/${u}" "${_HOST}${1}")"
+    d="$("$_GET_RESPONSE_JS" "${_CHROME}" "${_HOST}/home/index/${u}" "${_HOST}${1}" "$_USER_AGENT" "$(cat "$_COOKIE_FILE")")"
     el="$($_JQ -r '.val' <<< "$d")"
     if [[ "$($_JQ '.subs | length' <<< "$d")" -gt "0" ]]; then
         sl="$($_JQ -r '.subs[]| select(.name == "'"$_SUBTITLE_LANG"'") | .path' <<< "$d")"
