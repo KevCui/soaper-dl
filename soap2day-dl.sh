@@ -46,6 +46,14 @@ set_var() {
 
     _GET_RESPONSE_JS="${_SCRIPT_PATH}/bin/getResponse.js"
     _FETCH_FILE_JS="${_SCRIPT_PATH}/bin/fetchFile.js"
+
+    if [[ -f "${_SCRIPT_PATH}/bin/curl-impersonate" ]]; then
+        _USE_COOKIE=true
+        _CURL="${_SCRIPT_PATH}/bin/curl-impersonate"
+        _GET_COOKIE_JS="${_SCRIPT_PATH}/bin/getCookie.js"
+        _COOKIE_FILE="${_SCRIPT_PATH}/cookie"
+        _USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$($_CHROME --version | awk '{print $2}') Safari/537.36"
+    fi
 }
 
 set_args() {
@@ -111,7 +119,48 @@ sed_remove_space() {
 
 fetch_file() {
     # $1: url
-    "$_FETCH_FILE_JS" "$_CHROME" "$_HOST" "$1"
+    if [[ -z "${_USE_COOKIE:-}" ]]; then
+        "$_FETCH_FILE_JS" "$_CHROME" "$_HOST" "$1"
+    else
+        _COOKIE="$(get_cookie)"
+        "$_CURL" -sS -L -A "$_USER_AGENT" -H "Cookie: $_COOKIE" "$1"
+    fi
+}
+
+get_cookie() {
+    if [[ "$(is_file_expired "$_COOKIE_FILE" "55")" == "yes" ]]; then
+        local cookie
+        print_info "Wait 5s for fetching cookie..."
+        cookie="$($_GET_COOKIE_JS "$_CHROME" "$_HOST" "$_USER_AGENT" \
+            | $_JQ -r '.[] | "\(.name)=\(.value)"' \
+            | tr '\n' ';')"
+        if [[ -z "${cookie:-}" ]]; then
+            get_cookie
+        else
+            echo "$cookie" | tee "$_COOKIE_FILE"
+        fi
+    else
+        cat "$_COOKIE_FILE"
+    fi
+}
+
+is_file_expired() {
+    # $1: file
+    # $2: n minutes
+    local o
+    o="yes"
+
+    if [[ -f "$1" && -s "$1" ]]; then
+        local d n
+        d=$(date -d "$(date -r "$1") +$2 minutes" +%s)
+        n=$(date +%s)
+
+        if [[ "$n" -lt "$d" ]]; then
+            o="no"
+        fi
+    fi
+
+    echo "$o"
 }
 
 download_media_html() {

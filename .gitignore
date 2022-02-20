@@ -3,4 +3,6 @@
 .episode.*
 search.list
 */*
+bin/curl-impersonate
+cookie
 !bin/*.js

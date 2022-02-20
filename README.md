@@ -9,6 +9,7 @@
 - [How to use](#how-to-use)
   - [Usage](#usage)
   - [Example](#example)
+  - [Advanced Usage](#advanced-usage)
 - [Disclaimer](#disclaimer)
 - [You may also like...](#you-may-also-like)
 
@@ -154,6 +155,18 @@ SOAP2DAY_SUBTITLE_LANG=French ./soap2day-dl.sh -n 'game of thrones'
 ```
 ./soap2day-dl.sh -n 'game of thrones' -e 1.1 -x 'aria2c -x 16'
 ```
+
+### Advanced Usage
+
+It's recommended to use [curl-impersonate](https://github.com/lwthiker/curl-impersonate) to gain a faster running speed:
+
+1. Clone [curl-impersonate](https://github.com/lwthiker/curl-impersonate) repository to local
+
+2. Build **Chrome** binary following the instruction in [README.md](https://github.com/lwthiker/curl-impersonate/blob/main/README.md)
+
+3. Copy compiled binary to `bin/` folder: `docker cp <container-id>:/build/out/curl-impersonate bin/`
+
+After that, use script normally, you can feel the running speed gets faster!
 
 ## Disclaimer
 
