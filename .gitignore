@@ -4,5 +4,5 @@
 search.list
 */*
 bin/curl-impersonate
-cookie
+cookie.json
 !bin/*.js

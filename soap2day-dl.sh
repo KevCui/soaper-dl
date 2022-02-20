@@ -47,7 +47,7 @@ set_var() {
     _GET_RESPONSE_JS="${_SCRIPT_PATH}/bin/getResponse.js"
     _FETCH_FILE_JS="${_SCRIPT_PATH}/bin/fetchFile.js"
 
-    _COOKIE_FILE="${_SCRIPT_PATH}/cookie"
+    _COOKIE_FILE="${_SCRIPT_PATH}/cookie.json"
     _GET_COOKIE_JS="${_SCRIPT_PATH}/bin/getCookie.js"
     _USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$($_CHROME --version | awk '{print $2}') Safari/537.36"
     _COOKIE="$(get_cookie)"
