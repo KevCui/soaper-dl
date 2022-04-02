@@ -31,7 +31,7 @@ set_var() {
     _JQ="$(command -v jq)" || command_not_found "jq"
     _PUP="$(command -v pup)" || command_not_found "pup"
     _FZF="$(command -v fzf)" || command_not_found "fzf"
-    _CHROME="$(command -v chromium)" || "$(command -v chrome)" || command_not_found "chrome"
+    _CHROME="$(command -v chromium)" || _CHROME="$(command -v chrome)" || command_not_found "chrome"
 
     _HOST="https://soap2day.ac"
     _SEARCH_URL="$_HOST/search/keyword/"
