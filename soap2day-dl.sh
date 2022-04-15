@@ -350,7 +350,7 @@ main() {
     fi
 
     [[ -z "${_MEDIA_PATH:-}" ]] && print_error "Media not found! Missing option -n <name> or -p <path>?"
-    [[ -s "$_SEARCH_LIST_FILE" ]] && print_error "$_SEARCH_LIST_FILE not found. Please run \`-n <name>\` to generate it."
+    [[ ! -s "$_SEARCH_LIST_FILE" ]] && print_error "$_SEARCH_LIST_FILE not found. Please run \`-n <name>\` to generate it."
     _MEDIA_NAME=$(sort -u "$_SEARCH_LIST_FILE" \
                 | grep "$_MEDIA_PATH" \
                 | awk -F '] ' '{print $2}' \
