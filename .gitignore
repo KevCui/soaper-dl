@@ -5,4 +5,5 @@ search.list
 */*
 bin/curl-impersonate
 cookie.json
+user-agent
 !bin/*.js

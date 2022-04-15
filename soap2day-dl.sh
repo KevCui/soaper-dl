@@ -48,8 +48,16 @@ set_var() {
     _FETCH_FILE_JS="${_SCRIPT_PATH}/bin/fetchFile.js"
 
     _COOKIE_FILE="${_SCRIPT_PATH}/cookie.json"
+    _USER_AGENT_FILE="${_SCRIPT_PATH}/user-agent"
+    _USER_AGENT_LIST_FILE="${_SCRIPT_PATH}/user-agent.list"
     _GET_COOKIE_JS="${_SCRIPT_PATH}/bin/getCookie.js"
-    _USER_AGENT="Mozilla/5.0 (Linux; Android 7.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$($_CHROME --version | awk '{print $2}') Mobile Safari/537.36"
+    if [[ -s "$_USER_AGENT_FILE" ]]; then
+        _USER_AGENT="$(cat "$_USER_AGENT_FILE")"
+    else
+        remove_temp_file
+        _USER_AGENT="$(shuf -n1 "$_USER_AGENT_LIST_FILE")"
+        echo "$_USER_AGENT" > "$_USER_AGENT_FILE"
+    fi
     _COOKIE="$(get_cookie)"
 
     if [[ -f "${_SCRIPT_PATH}/bin/curl-impersonate" ]]; then
@@ -144,6 +152,11 @@ get_cookie() {
     "$_JQ" -r '.[] | "\(.name)=\(.value)"' "$_COOKIE_FILE" | tr '\n' ';'
 }
 
+remove_temp_file() {
+    rm -f "$_COOKIE_FILE"
+    rm -f "$_USER_AGENT_FILE"
+}
+
 is_file_expired() {
     # $1: file
     # $2: n minutes
@@ -182,7 +195,7 @@ search_media_by_name() {
     d="$(fetch_file "${_SEARCH_URL}$1")"
     t="$($_PUP ".thumbnail" <<< "$d")"
     len="$(grep -c "class=\"thumbnail" <<< "$t")"
-    [[ -z "$len" || "$len" == "0" ]] && (rm -f "$_COOKIE_FILE"; print_error "Media not found!")
+    [[ -z "$len" || "$len" == "0" ]] && (remove_temp_file; print_error "Media not found!")
 
     true > "$_SEARCH_LIST_FILE"
     for i in $(seq 1 "$len"); do
