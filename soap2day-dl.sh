@@ -191,7 +191,7 @@ get_media_name() {
 
 search_media_by_name() {
     # $1: media name
-    local d t len l n
+    local d t len l n lb
     d="$(fetch_file "${_SEARCH_URL}$1")"
     t="$($_PUP ".thumbnail" <<< "$d")"
     len="$(grep -c "class=\"thumbnail" <<< "$t")"
@@ -201,7 +201,8 @@ search_media_by_name() {
     for i in $(seq 1 "$len"); do
         n="$($_PUP ".thumbnail:nth-child($i) h5 a:nth-child(1) text{}" <<< "$t" | sed_remove_space)"
         l="$($_PUP ".thumbnail:nth-child($i) h5 a:nth-child(1) attr{href}" <<< "$t" | sed_remove_space)"
-        echo "[$l] $n" | tee -a "$_SEARCH_LIST_FILE"
+        lb="$($_PUP --charset UTF-8 ".thumbnail:nth-child($i) .label-info text{}" <<< "$t" | sed_remove_space)"
+        echo "[$l][$lb] $n" | tee -a "$_SEARCH_LIST_FILE"
     done
 }
 
