@@ -49,13 +49,12 @@ set_var() {
 
     _COOKIE_FILE="${_SCRIPT_PATH}/cookie.json"
     _USER_AGENT_FILE="${_SCRIPT_PATH}/user-agent"
-    _USER_AGENT_LIST_FILE="${_SCRIPT_PATH}/user-agent.list"
     _GET_COOKIE_JS="${_SCRIPT_PATH}/bin/getCookie.js"
     if [[ -s "$_USER_AGENT_FILE" ]]; then
         _USER_AGENT="$(cat "$_USER_AGENT_FILE")"
     else
         remove_temp_file
-        _USER_AGENT="$(shuf -n1 "$_USER_AGENT_LIST_FILE")"
+        _USER_AGENT="Mozilla/5.0 (X11; CrOS aarch64 13816.64.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$(shuf -i 90-100 -n 1).0.$(shuf -i 4000-4500 -n 1).100 Safari/537.36"
         echo "$_USER_AGENT" > "$_USER_AGENT_FILE"
     fi
     _COOKIE="$(get_cookie)"
