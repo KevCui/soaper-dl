@@ -130,7 +130,7 @@ fetch_file() {
     # $1: url
     if [[ -z "${_USE_CURL_IMPERSONATE:-}" ]]; then
         _COOKIE="$(cat "$_COOKIE_FILE")"
-        "$_FETCH_FILE_JS" "$_CHROME" "$_HOST" "$1" "$_USER_AGENT" "$_COOKIE"
+        "$_FETCH_FILE_JS" "$_CHROME" "$_HOST" "$1" "$_USER_AGENT" "$_COOKIE" 2> /dev/null
     else
         _COOKIE="$(get_cookie)"
         "$_CURL" -sS -L -A "$_USER_AGENT" -H "Cookie: $_COOKIE" "$1"
@@ -141,7 +141,7 @@ get_cookie() {
     if [[ "$(is_file_expired "$_COOKIE_FILE" "55")" == "yes" ]]; then
         local cookie
         print_info "Wait a few seconds for fetching cookie..."
-        cookie="$($_GET_COOKIE_JS "$_CHROME" "$_HOST" "$_USER_AGENT")"
+        cookie="$($_GET_COOKIE_JS "$_CHROME" "$_HOST" "$_USER_AGENT" 2> /dev/null)"
         if [[ -z "${cookie:-}" ]]; then
             get_cookie
         else
@@ -273,7 +273,7 @@ download_media() {
     local u d el sl currdir
     download_media_html "$1"
     is_movie "$_MEDIA_PATH" && u="GetMInfoAjax" || u="GetEInfoAjax"
-    d="$("$_GET_RESPONSE_JS" "${_CHROME}" "${_HOST}/home/index/${u}" "${_HOST}${1}" "$_USER_AGENT" "$(cat "$_COOKIE_FILE")")"
+    d="$("$_GET_RESPONSE_JS" "${_CHROME}" "${_HOST}/home/index/${u}" "${_HOST}${1}" "$_USER_AGENT" "$(cat "$_COOKIE_FILE")" 2> /dev/null)"
     el="$($_JQ -r '.val' <<< "$d")"
     if [[ "$($_JQ '.subs | length' <<< "$d")" -gt "0" ]]; then
         sl="$($_JQ -r '.subs[]| select(.name == "'"$_SUBTITLE_LANG"'") | .path' <<< "$d")"
