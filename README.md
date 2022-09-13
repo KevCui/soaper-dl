@@ -28,7 +28,7 @@
 
 ```
 $ cd bin
-$ npm i puppeteer-extra puppeteer-extra-plugin-stealth
+$ npm i puppeteer-core puppeteer-extra puppeteer-extra-plugin-stealth
 ```
 
 ## How to use
