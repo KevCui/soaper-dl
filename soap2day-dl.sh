@@ -141,8 +141,9 @@ get_cookie() {
     if [[ "$(is_file_expired "$_COOKIE_FILE" "55")" == "yes" ]]; then
         local cookie
         print_info "Wait a few seconds for fetching cookie..."
-        cookie="$($_GET_COOKIE_JS "$_CHROME" "$_HOST" "$_USER_AGENT" 2> /dev/null)"
-        if [[ -z "${cookie:-}" ]]; then
+
+        cookie="$($_GET_COOKIE_JS "$_CHROME" "$_HOST" "$_USER_AGENT" 2>&1)"
+        if [[ $? -ne 0 || -z "${cookie:-}" ]]; then
             get_cookie
         else
             echo "$cookie" > "$_COOKIE_FILE"
