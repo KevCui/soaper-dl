@@ -102,25 +102,6 @@ sed_remove_space() {
     sed -E '/^[[:space:]]*$/d;s/^[[:space:]]+//;s/[[:space:]]+$//'
 }
 
-is_file_expired() {
-    # $1: file
-    # $2: n minutes
-    local o
-    o="yes"
-
-    if [[ -f "$1" && -s "$1" ]]; then
-        local d n
-        d=$(date -d "$(date -r "$1") +$2 minutes" +%s)
-        n=$(date +%s)
-
-        if [[ "$n" -lt "$d" ]]; then
-            o="no"
-        fi
-    fi
-
-    echo "$o"
-}
-
 download_media_html() {
     # $1: media link
     "$_CURL" -sS "${_HOST}${1}" > "$_SCRIPT_PATH/$_MEDIA_NAME/$_MEDIA_HTML"
