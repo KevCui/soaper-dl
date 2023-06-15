@@ -9,9 +9,7 @@
 - [How to use](#how-to-use)
   - [Usage](#usage)
   - [Example](#example)
-  - [Advanced Usage](#advanced-usage)
 - [Disclaimer](#disclaimer)
-- [You may also like...](#you-may-also-like)
 
 ## Dependency
 
@@ -138,12 +136,6 @@ SOAPER_SUBTITLE_LANG=fr ./soaper-dl.sh -n 'game of thrones'
 ## Disclaimer
 
 The purpose of this script is to download TV series episodes and movies in order to watch them later in case when Internet is not available. Please do NOT copy or distribute downloaded materials to any third party. Watch them and delete them afterwards. Please use this script at your own responsibility.
-
-## You may also like...
-
-### What to know when the new episode of your favorite TV series or movie will be released?
-
-Check out this script [tvdb-cli](https://github.com/KevCui/tvdb-cli)
 
 ---
 
