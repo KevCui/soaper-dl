@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# Download TV series and Movies from Soap2day using CLI
+# Download TV series and Movies from Soaper using CLI
 #
 #/ Usage:
-#/   ./soap2day-dl.sh [-n <name>] [-p <path>] [-e <num1,num2,num3-num4...>] [-l] [-s] [-x <command>] [-d]
+#/   ./soaper-dl.sh [-n <name>] [-p <path>] [-e <num1,num2,num3-num4...>] [-l] [-s] [-d]
 #/
 #/ Options:
 #/   -n <name>               TV series or Movie name
@@ -15,7 +15,6 @@
 #/                           episode range using "-"
 #/   -l                      optional, list video or subtitle link without downloading
 #/   -s                      optional, download subtitle only
-#/   -x                      optional, call external download utility
 #/   -d                      enable debug mode
 #/   -h | --help             display this help message
 
@@ -31,9 +30,9 @@ set_var() {
     _JQ="$(command -v jq)" || command_not_found "jq"
     _PUP="$(command -v pup)" || command_not_found "pup"
     _FZF="$(command -v fzf)" || command_not_found "fzf"
-    _CHROME="$(command -v chromium)" || _CHROME="$(command -v chrome)" || command_not_found "chrome"
+    _FFMPEG="$(command -v ffmpeg)" || command_not_found "ffmpeg"
 
-    _HOST="https://soap2day.ac"
+    _HOST="https://soaper.tv"
     _SEARCH_URL="$_HOST/search/keyword/"
 
     _SCRIPT_PATH=$(dirname "$(realpath "$0")")
@@ -42,27 +41,7 @@ set_var() {
     _EPISODE_LINK_LIST=".episode.link"
     _EPISODE_TITLE_LIST=".episode.title"
     _MEDIA_HTML=".media.html"
-    _SUBTITLE_LANG="${SOAP2DAY_SUBTITLE_LANG:-English}"
-
-    _GET_RESPONSE_JS="${_SCRIPT_PATH}/bin/getResponse.js"
-    _FETCH_FILE_JS="${_SCRIPT_PATH}/bin/fetchFile.js"
-
-    _COOKIE_FILE="${_SCRIPT_PATH}/cookie.json"
-    _USER_AGENT_FILE="${_SCRIPT_PATH}/user-agent"
-    _GET_COOKIE_JS="${_SCRIPT_PATH}/bin/getCookie.js"
-    if [[ -s "$_USER_AGENT_FILE" ]]; then
-        _USER_AGENT="$(cat "$_USER_AGENT_FILE")"
-    else
-        remove_temp_file
-        _USER_AGENT="Mozilla/5.0 (X11; CrOS aarch64 13816.64.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/$(shuf -i 90-100 -n 1).0.$(shuf -i 4000-4500 -n 1).100 Safari/537.36"
-        echo "$_USER_AGENT" > "$_USER_AGENT_FILE"
-    fi
-    _COOKIE="$(get_cookie)"
-
-    if [[ -f "${_SCRIPT_PATH}/bin/curl-impersonate" ]]; then
-        _USE_CURL_IMPERSONATE=true
-        _CURL="${_SCRIPT_PATH}/bin/curl-impersonate"
-    fi
+    _SUBTITLE_LANG="${SOAPER_SUBTITLE_LANG:-en}"
 }
 
 set_args() {
@@ -83,9 +62,6 @@ set_args() {
                 ;;
             s)
                 _DOWNLOAD_SUBTITLE_ONLY=true
-                ;;
-            x)
-                _EXTERNAL_COMMAND="$OPTARG"
                 ;;
             d)
                 _DEBUG_MODE=true
@@ -126,37 +102,6 @@ sed_remove_space() {
     sed -E '/^[[:space:]]*$/d;s/^[[:space:]]+//;s/[[:space:]]+$//'
 }
 
-fetch_file() {
-    # $1: url
-    if [[ -z "${_USE_CURL_IMPERSONATE:-}" ]]; then
-        _COOKIE="$(cat "$_COOKIE_FILE")"
-        "$_FETCH_FILE_JS" "$_CHROME" "$_HOST" "$1" "$_USER_AGENT" "$_COOKIE" 2> /dev/null
-    else
-        _COOKIE="$(get_cookie)"
-        "$_CURL" -sS -L -A "$_USER_AGENT" -H "Cookie: $_COOKIE" "$1"
-    fi
-}
-
-get_cookie() {
-    if [[ "$(is_file_expired "$_COOKIE_FILE" "55")" == "yes" ]]; then
-        local cookie
-        print_info "Wait a few seconds for fetching cookie..."
-
-        cookie="$($_GET_COOKIE_JS "$_CHROME" "$_HOST" "$_USER_AGENT" 2>&1)"
-        if [[ $? -ne 0 || -z "${cookie:-}" ]]; then
-            get_cookie
-        else
-            echo "$cookie" > "$_COOKIE_FILE"
-        fi
-    fi
-    "$_JQ" -r '.[] | "\(.name)=\(.value)"' "$_COOKIE_FILE" | tr '\n' ';'
-}
-
-remove_temp_file() {
-    rm -f "$_COOKIE_FILE"
-    rm -f "$_USER_AGENT_FILE"
-}
-
 is_file_expired() {
     # $1: file
     # $2: n minutes
@@ -178,12 +123,12 @@ is_file_expired() {
 
 download_media_html() {
     # $1: media link
-    fetch_file "${_HOST}${1}" > "$_SCRIPT_PATH/$_MEDIA_NAME/$_MEDIA_HTML"
+    "$_CURL" -sS "${_HOST}${1}" > "$_SCRIPT_PATH/$_MEDIA_NAME/$_MEDIA_HTML"
 }
 
 get_media_name() {
     # $1: media link
-    fetch_file "${_HOST}${1}" \
+    "$_CURL" -sS "${_HOST}${1}" \
         | $_PUP ".panel-body h4 text{}" \
         | head -1 \
         | sed_remove_space
@@ -192,10 +137,10 @@ get_media_name() {
 search_media_by_name() {
     # $1: media name
     local d t len l n lb
-    d="$(fetch_file "${_SEARCH_URL}$1")"
+    d="$("$_CURL" -sS "${_SEARCH_URL}$1")"
     t="$($_PUP ".thumbnail" <<< "$d")"
     len="$(grep -c "class=\"thumbnail" <<< "$t")"
-    [[ -z "$len" || "$len" == "0" ]] && (remove_temp_file; print_error "Media not found!")
+    [[ -z "$len" || "$len" == "0" ]] && print_error "Media not found!"
 
     true > "$_SEARCH_LIST_FILE"
     for i in $(seq 1 "$len"); do
@@ -208,13 +153,13 @@ search_media_by_name() {
 
 is_movie() {
     # $1: media path
-    [[ "$1" =~ ^/M.* ]] && return 0 || return 1
+    [[ "$1" =~ ^/movie_.* ]] && return 0 || return 1
 }
 
 download_source() {
     local d a
     mkdir -p "$_SCRIPT_PATH/$_MEDIA_NAME"
-    d="$(fetch_file "${_HOST}${_MEDIA_PATH}")"
+    d="$("$_CURL" -sS "${_HOST}${_MEDIA_PATH}")"
     a="$($_PUP ".alert-info-ex" <<< "$d")"
     if is_movie "$_MEDIA_PATH"; then
         download_media "$_MEDIA_PATH" "$_MEDIA_NAME"
@@ -271,40 +216,34 @@ download_episode() {
 download_media() {
     # $1: media link
     # $2: media name
-    local u d el sl currdir
+    local u d el sl p
     download_media_html "$1"
     is_movie "$_MEDIA_PATH" && u="GetMInfoAjax" || u="GetEInfoAjax"
-    d="$("$_GET_RESPONSE_JS" "${_CHROME}" "${_HOST}/home/index/${u}" "${_HOST}${1}" "$_USER_AGENT" "$(cat "$_COOKIE_FILE")" 2> /dev/null)"
+    p="$(sed 's/.*e_//;s/.html//' <<< "$1")"
+    d="$("$_CURL" -sS "${_HOST}/home/index/${u}" \
+        -H "referer: https://${_HOST}${1}" \
+        --data-raw "pass=${p}&param=ddd&extra=&e2=0")"
     el="$($_JQ -r '.val' <<< "$d")"
+    [[ "$el" != *".m3u8" ]] && el="$($_JQ -r '.val_bak' <<< "$d")"
     if [[ "$($_JQ '.subs | length' <<< "$d")" -gt "0" ]]; then
-        sl="$($_JQ -r '.subs[]| select(.name == "'"$_SUBTITLE_LANG"'") | .path' <<< "$d")"
+        sl="$($_JQ -r '.subs[]| select(.name | contains ("'"$_SUBTITLE_LANG"'")) | .path' <<< "$d")"
     fi
 
     if [[ -z ${_LIST_LINK_ONLY:-} ]]; then
         if [[ -n "${sl:-}" ]]; then
             print_info "Downloading subtitle $2..."
-            fetch_file "${_HOST}${sl}" > "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}_${_SUBTITLE_LANG}.srt"
+            "$_CURL" "${sl}" > "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}_${_SUBTITLE_LANG}.srt"
         fi
         if [[ -z ${_DOWNLOAD_SUBTITLE_ONLY:-} ]]; then
             print_info "Downloading video $2..."
-
-            if [[ -z ${_EXTERNAL_COMMAND:-} ]]; then
-                $_CURL -L "$el" -g -o "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}.mp4"
-            else
-                el="${el//\?/\\\?}"
-                el="${el//\&/\\\&}"
-                currdir="$(pwd)"
-                cd "$_SCRIPT_PATH/${_MEDIA_NAME}"
-                eval "$_EXTERNAL_COMMAND $el"
-                cd "$currdir"
-            fi
+            "$_FFMPEG" -i "$el" -c copy -v error -y "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}.mp4"
         fi
     else
         if [[ -z ${_DOWNLOAD_SUBTITLE_ONLY:-} ]]; then
             echo "$el"
         else
             if [[ -n "${sl:-}" ]]; then
-                echo "${_HOST}${sl}"
+                echo "${sl}"
             fi
         fi
     fi
