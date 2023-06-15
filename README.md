@@ -1,6 +1,6 @@
-# soap2day-dl
+# soaper-dl
 
-> Download TV series and movies from [soap2day](https://soap2day.to/) in your terminal
+> Download TV series and movies from [Soaper](https://soaper.tv/) in your terminal
 
 ## Table of Contents
 
@@ -19,17 +19,7 @@
 - [jq](https://stedolan.github.io/jq/)
 - [pup](https://github.com/EricChiang/pup)
 - [fzf](https://github.com/junegunn/fzf)
-- [Node.js](https://nodejs.org/en/download/)
-- Chrome / Chromium browser
-
-## Installation
-
-- Install npm packages:
-
-```
-$ cd bin
-$ npm i puppeteer-core puppeteer-extra puppeteer-extra-plugin-stealth
-```
+- [ffmpeg](https://ffmpeg.org/download.html)
 
 ## How to use
 
@@ -37,7 +27,7 @@ $ npm i puppeteer-core puppeteer-extra puppeteer-extra-plugin-stealth
 
 ```
 Usage:
-  ./soap2day-dl.sh [-n <name>] [-p <path>] [-e <num1,num2,num3-num4...>] [-l] [-s] [-x <command>] [-d]
+  ./soaper-dl.sh [-n <name>] [-p <path>] [-e <num1,num2,num3-num4...>] [-l] [-s] [-d]
 
 Options:
   -n <name>               TV series or Movie name
@@ -49,7 +39,6 @@ Options:
                           episode range using "-"
   -l                      optional, list video or subtitle link without downloading
   -s                      optional, download subtitle only
-  -x                      optional, call external download utility
   -d                      enable debug mode
   -h | --help             display this help message
 ```
@@ -59,17 +48,19 @@ Options:
 - Search TV series or movies name and select the right one in `fzf`:
 
 ```bash
-$ ./soap2day-dl.sh -n 'game of'
-  [/movie_aTo3Njk2Ow.html] Game of Death
-  [/movie_aToxNTUwOw.html] Sherlock Holmes: A Game of Shadows
-  [/tv_aToyMjUzOw.html] Game of Silence
-> [/tv_aTo2Mjs.html] Game of Thrones
+$ ./soaper-dl.sh -n 'game of'
+  [/movie_mlkW68VGba.html][2023] The Game of Crowns: The Tudors
+  [/movie_nXDEY29Dml.html][2023] Game of Love
+  [/movie_LwD8MEPg9a.html][2023] Game of Deceit
+  [/movie_zrYg3nbDL1.html][2022] A Game of Secrets
+  [/movie_wY4GQ0Wgbe.html][2023] Game of Love
+> [/tv_34OGB6G6Zl.html][2011-04-17] Game of Thrones
 ```
 
-- If the media URI path is known, for instance, `/tv_aTo2Mjs.html` in the previous example is the path for `Game of Thrones`:
+- If the media URI path is known, for instance, `/tv_34OGB6G6Zl.html` in the previous example is the path for `Game of Thrones`:
 
 ```bash
-$ ./soap2day-dl.sh -p /tv_aTo2Mjs.html
+$ ./soaper-dl.sh -p /tv_34OGB6G6Zl.html
 ...
 [2.1] 1.Winter is Coming
 [2.2] 2.The Kingsroad
@@ -86,7 +77,7 @@ Which episode(s) to download:
 - Download `Friends S01E01`:
 
 ```bash
-$ ./soap2day-dl.sh -p /tv_aTo2OTs.html -e 1.1
+$ ./soaper-dl.sh -p /tv_YxAgjOVGEL.html -e 1.1
 [INFO] Downloading video 1.1...
 ```
 
@@ -95,7 +86,7 @@ The downloaded video will be present in the folder `~/<media_name>/`
 - Support batch downloads: download `Friends S01E01` to `S01E05`:
 
 ```bash
-$ ./soap2day-dl.sh -p /tv_aTo2OTs.html -e 1.1,1.2,1.3,1.4,1.5
+$ ./soaper-dl.sh -p /tv_aTo2OTs.html -e 1.1,1.2,1.3,1.4,1.5
 [INFO] Downloading video 1.1...
 ...
 [INFO] Downloading video 1.2...
@@ -111,7 +102,7 @@ $ ./soap2day-dl.sh -p /tv_aTo2OTs.html -e 1.1,1.2,1.3,1.4,1.5
 OR using episode range:
 
 ```bash
-$ ./soap2day-dl.sh -p /tv_aTo2OTs.html -e 1.1-1.5
+$ ./soaper-dl.sh -p /tv_aTo2OTs.html -e 1.1-1.5
 [INFO] Downloading video 1.1...
 ...
 [INFO] Downloading video 1.2...
@@ -129,44 +120,20 @@ $ ./soap2day-dl.sh -p /tv_aTo2OTs.html -e 1.1-1.5
 - Display only video link, used to pipe into `mpv` or other media player:
 
 ```bash
-$ mpv "$(./soap2day-dl.sh -p /tv_aTo2Mjs.html -e 1.1 -l)"
-```
-
-OR the interactive way:
-
-```bash
-$ mpv "$(./soap2day-dl.sh -n 'game of' -l | grep 'https://')"
+$ mpv "$(./soaper-dl.sh -p /tv_YxAgjOVGEL.html -e 1.1 -l)"
 ```
 
 - Download subtitle only
 
 ```
-./soap2day-dl.sh -n 'game of thrones' -s
+./soaper-dl.sh -n 'game of thrones' -s
 ```
 
 - Customize subtitle language
 
+```bash
+SOAPER_SUBTITLE_LANG=fr ./soaper-dl.sh -n 'game of thrones'
 ```
-SOAP2DAY_SUBTITLE_LANG=French ./soap2day-dl.sh -n 'game of thrones'
-```
-
-- Use external download utility instead of `curl`, for example using `aria2c`:
-
-```
-./soap2day-dl.sh -n 'game of thrones' -e 1.1 -x 'aria2c -x 16'
-```
-
-### Advanced Usage
-
-It's recommended to use [curl-impersonate](https://github.com/lwthiker/curl-impersonate) to gain a faster running speed:
-
-1. Clone [curl-impersonate](https://github.com/lwthiker/curl-impersonate) repository to local
-
-2. Build **Chrome** binary following the instruction in [README.md](https://github.com/lwthiker/curl-impersonate/blob/main/README.md)
-
-3. Copy compiled binary to `bin/` folder: `docker cp <container-id>:/build/out/curl-impersonate bin/`
-
-After that, use script normally, you can feel the running speed gets faster!
 
 ## Disclaimer
 
