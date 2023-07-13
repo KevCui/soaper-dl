@@ -207,7 +207,7 @@ download_media() {
     el="$($_JQ -r '.val' <<< "$d")"
     [[ "$el" != *".m3u8" ]] && el="$($_JQ -r '.val_bak' <<< "$d")"
     if [[ "$($_JQ '.subs | length' <<< "$d")" -gt "0" ]]; then
-        sl="$($_JQ -r '.subs[]| select(.name | contains ("'"$_SUBTITLE_LANG"'")) | .path' <<< "$d")"
+        sl="$($_JQ -r '.subs[]| select(.name | contains ("'"$_SUBTITLE_LANG"'")) | .path' <<< "$d" | head -1)"
     fi
 
     if [[ -z ${_LIST_LINK_ONLY:-} ]]; then
