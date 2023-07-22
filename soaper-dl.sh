@@ -203,8 +203,9 @@ download_media() {
     p="$(sed 's/.*e_//;s/.html//' <<< "$1")"
     d="$("$_CURL" -sS "${_HOST}/home/index/${u}" \
         -H "referer: https://${_HOST}${1}" \
-        --data-raw "pass=${p}&param=ddd&extra=&e2=0")"
+        --data-raw "pass=${p}")"
     el="$($_JQ -r '.val' <<< "$d")"
+    el="${_HOST}${el}"
     [[ "$el" != *".m3u8" ]] && el="$($_JQ -r '.val_bak' <<< "$d")"
     if [[ "$($_JQ '.subs | length' <<< "$d")" -gt "0" ]]; then
         sl="$($_JQ -r '.subs[]| select(.name | ascii_downcase | contains ("'"$_SUBTITLE_LANG"'")) | .path' <<< "$d" | head -1)"
