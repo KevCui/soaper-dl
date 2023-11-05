@@ -211,6 +211,7 @@ download_media() {
         sl="${sl// /%20}"
         sl="${sl//[/\\\[}"
         sl="${sl//]/\\\]}"
+        sl="${_HOST}$sl"
     fi
 
     if [[ -z ${_LIST_LINK_ONLY:-} ]]; then
