@@ -218,9 +218,7 @@ download_media() {
         sl="${_HOST}$sl"
     fi
 
-    # if LIST_LINK_ONLY IS LENGTH 0
     if [[ -z ${_LIST_LINK_ONLY:-} ]]; then
-        # if sl length is not 0
         if [[ -n "${sl:-}" ]]; then
             if [[ -z ${_DOWNLOAD_MEDIA_ONLY:-} ]]; then
               print_info "Downloading subtitle $2..."
