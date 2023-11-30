@@ -15,6 +15,7 @@
 #/                           episode range using "-"
 #/   -l                      optional, list video or subtitle link without downloading
 #/   -s                      optional, download subtitle only
+#/   -m                      optional, download media only
 #/   -d                      enable debug mode
 #/   -h | --help             display this help message
 
@@ -46,7 +47,7 @@ set_var() {
 
 set_args() {
     expr "$*" : ".*--help" > /dev/null && usage
-    while getopts ":hlsdn:x:p:e:" opt; do
+    while getopts ":hlsmdn:x:p:e:" opt; do
         case $opt in
             n)
                 _INPUT_NAME="${OPTARG// /%20}"
@@ -62,6 +63,9 @@ set_args() {
                 ;;
             s)
                 _DOWNLOAD_SUBTITLE_ONLY=true
+                ;;
+            m)
+                _DOWNLOAD_MEDIA_ONLY=true
                 ;;
             d)
                 _DEBUG_MODE=true
@@ -214,19 +218,31 @@ download_media() {
         sl="${_HOST}$sl"
     fi
 
+    # if LIST_LINK_ONLY IS LENGTH 0
     if [[ -z ${_LIST_LINK_ONLY:-} ]]; then
+        # if sl length is not 0
         if [[ -n "${sl:-}" ]]; then
-            print_info "Downloading subtitle $2..."
-            "$_CURL" "${sl}" > "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}_${_SUBTITLE_LANG}.srt"
+            if [[ -z ${_DOWNLOAD_MEDIA_ONLY:-} ]]; then
+              print_info "Downloading subtitle $2..."
+              "$_CURL" "${sl}" > "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}_${_SUBTITLE_LANG}.srt"
+              if [[ -n ${_DOWNLOAD_SUBTITLE_ONLY:-} ]]; then
+                return
+              fi
+            fi
         fi
-        if [[ -z ${_DOWNLOAD_SUBTITLE_ONLY:-} ]]; then
-            print_info "Downloading video $2..."
-            "$_FFMPEG" -i "$el" -c copy -v error -y "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}.mp4"
-        fi
+          print_info "Downloading video $2..."
+          "$_FFMPEG" -i "$el" -c copy -v error -y "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}.mp4"
     else
-        if [[ -z ${_DOWNLOAD_SUBTITLE_ONLY:-} ]]; then
+        if [[ -n ${_DOWNLOAD_MEDIA_ONLY:-} ]]; then
             echo "$el"
-        else
+            return
+        elif [[ -n ${_DOWNLOAD_SUBTITLE_ONLY:-} ]]; then
+            if [[ -n "${sl:-}" ]]; then
+                echo "${sl}"
+            fi
+            return
+        elif [[ -z ${_DOWNLOAD_SUBTITLE_ONLY:-} ]] && [[ -z ${_DOWNLOAD_MEDIA_ONLY:-} ]]; then
+            echo "$el"
             if [[ -n "${sl:-}" ]]; then
                 echo "${sl}"
             fi
@@ -259,7 +275,7 @@ create_episode_list() {
 
 select_episodes_to_download() {
     cat "$_SCRIPT_PATH/$_MEDIA_NAME/$_EPISODE_TITLE_LIST" >&2
-    echo -n "Which episode(s) to downolad: " >&2
+    echo -n "Which episode(s) to download: " >&2
     read -r s
     echo "$s"
 }
