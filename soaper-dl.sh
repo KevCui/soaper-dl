@@ -215,7 +215,7 @@ download_media() {
     fi
 
     if [[ -z ${_LIST_LINK_ONLY:-} ]]; then
-        if [[ -n "${sl:-}" ]]; then
+        if [[ -n "${sl:-}" && "$sl" != "$_HOST" ]]; then
             print_info "Downloading subtitle $2..."
             "$_CURL" "${sl}" > "$_SCRIPT_PATH/${_MEDIA_NAME}/${2}_${_SUBTITLE_LANG}.srt"
         fi
