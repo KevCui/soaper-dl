@@ -259,7 +259,7 @@ create_episode_list() {
 
 select_episodes_to_download() {
     cat "$_SCRIPT_PATH/$_MEDIA_NAME/$_EPISODE_TITLE_LIST" >&2
-    echo -n "Which episode(s) to downolad: " >&2
+    echo -n "Which episode(s) to download: " >&2
     read -r s
     echo "$s"
 }
