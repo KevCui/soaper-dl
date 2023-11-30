@@ -37,6 +37,7 @@ Options:
                           episode range using "-"
   -l                      optional, list video or subtitle link without downloading
   -s                      optional, download subtitle only
+  -m                      optional, download media only
   -d                      enable debug mode
   -h | --help             display this help message
 ```
@@ -125,6 +126,12 @@ $ mpv "$(./soaper-dl.sh -p /tv_YxAgjOVGEL.html -e 1.1 -l)"
 
 ```
 ./soaper-dl.sh -n 'game of thrones' -s
+```
+
+- Download media only
+
+```
+./soaper-dl.sh -n 'game of thrones' -m
 ```
 
 - Customize subtitle language
