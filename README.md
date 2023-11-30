@@ -25,7 +25,7 @@
 
 ```
 Usage:
-  ./soaper-dl.sh [-n <name>] [-p <path>] [-e <num1,num2,num3-num4...>] [-l] [-s] [-d]
+  ./soaper-dl.sh [-n <name>] [-p <path>] [-e <num1,num2,num3-num4...>] [-l] [-s] [-m] [-d]
 
 Options:
   -n <name>               TV series or Movie name
