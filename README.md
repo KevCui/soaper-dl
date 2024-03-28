@@ -133,6 +133,12 @@ $ mpv "$(./soaper-dl.sh -p /tv_YxAgjOVGEL.html -e 1.1 -l)"
 SOAPER_SUBTITLE_LANG=fr ./soaper-dl.sh -n 'game of thrones'
 ```
 
+- Customize download folder for the videos
+
+```bash
+SOAPER_DOWNLOAD_PATH=~/Downloads/Videos ./soaper-dl.sh -n 'game of thrones'
+```
+
 ## Disclaimer
 
 The purpose of this script is to download TV series episodes and movies in order to watch them later in case when Internet is not available. Please do NOT copy or distribute downloaded materials to any third party. Watch them and delete them afterwards. Please use this script at your own responsibility.
