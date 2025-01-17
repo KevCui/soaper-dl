@@ -1,6 +1,6 @@
 # soaper-dl
 
-> Download TV series and movies from [Soaper](https://soaper.tv/) in your terminal
+> Download TV series and movies from [Soaper](https://soaper.live/) in your terminal
 
 ## Table of Contents
 

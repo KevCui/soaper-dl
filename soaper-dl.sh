@@ -32,7 +32,7 @@ set_var() {
     _FZF="$(command -v fzf)" || command_not_found "fzf"
     _FFMPEG="$(command -v ffmpeg)" || command_not_found "ffmpeg"
 
-    _HOST="https://soaper.tv"
+    _HOST="https://soaper.live"
     _SEARCH_URL="$_HOST/search/keyword/"
 
     _SCRIPT_PATH=$(dirname "$(realpath "$0")")
